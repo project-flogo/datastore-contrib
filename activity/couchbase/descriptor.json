@@ -1,0 +1,65 @@
+{
+    "name": "couchbase",
+    "type": "flogo:activity",
+    "version": "5.0.0.0",
+    "title": "Couchbase connector",
+    "description": "Manage Couchbase documents in a specified bucket",
+    "homepage": "https://github.com/project-flogo/contrib/tree/master/activity/couchbase",
+    "input": [
+      {
+        "name": "key",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "data",
+        "type": "string"
+      },
+      {
+        "name": "method",
+        "type": "string",
+        "allowed": [
+          "Insert",
+          "Upsert",
+          "Remove",
+          "Get"
+        ],
+        "value": "Insert",
+        "required": true
+      },
+      {
+        "name": "expiry",
+        "type": "integer",
+        "value": 0,
+        "required": true
+      },
+      {
+        "name": "server",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "username",
+        "type": "string"
+      },
+      {
+        "name": "password",
+        "type": "string"
+      },
+      {
+        "name": "bucket",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "bucketPassword",
+        "type": "string"
+      }
+    ],
+    "output": [
+      {
+        "name": "output",
+        "type": "any"
+      }
+    ]
+  }
