@@ -5,12 +5,13 @@
     "title": "MongoDB",
     "description": "Manage MongoDB documents in a specified collection",
     "homepage": "",
+    "settings":{
+      "name": "uri",
+      "type": "string",
+      "required": true
+    },
     "input": [
-      {
-        "name": "uri",
-        "type": "string",
-        "required": true
-      },
+      
       {
         "name": "dbName",
         "type": "string",
@@ -25,9 +26,9 @@
         "name": "method",
         "type": "string",
         "allowed": [
+          "GET",
           "DELETE",
           "INSERT",
-          "REPLACE",
           "UPDATE"
         ],
         "value": "INSERT",

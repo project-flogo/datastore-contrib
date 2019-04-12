@@ -7,7 +7,7 @@ import (
 type Settings struct {
 	Username       string `md:"username"`
 	Password       string `md:"password"`
-	BucketName     string `md:"bucket,required"`
+	BucketName     string `md:"bucketname,required"`
 	BucketPassword string `md:"bucketpassword"`
 	Server         string `md:"server,required"`
 }
