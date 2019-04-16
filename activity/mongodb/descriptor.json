@@ -5,20 +5,9 @@
     "title": "MongoDB",
     "description": "Manage MongoDB documents in a specified collection",
     "homepage": "",
-    "settings":{
-      "name": "uri",
-      "type": "string",
-      "required": true
-    },
-    "input": [
-      
+    "settings":[
       {
-        "name": "dbName",
-        "type": "string",
-        "required": true
-      },
-      {
-        "name": "collection",
+        "name": "uri",
         "type": "string",
         "required": true
       },
@@ -32,6 +21,19 @@
           "UPDATE"
         ],
         "value": "INSERT",
+        "required": true
+      }
+    ],
+    "input": [
+      
+      {
+        "name": "dbName",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "collection",
+        "type": "string",
         "required": true
       },
       {

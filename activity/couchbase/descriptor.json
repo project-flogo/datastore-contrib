@@ -5,6 +5,30 @@
     "title": "Couchbase connector",
     "description": "Manage Couchbase documents in a specified bucket",
     "homepage": "https://github.com/project-flogo/contrib/tree/master/activity/couchbase",
+    "settings":[
+      {
+        "name": "bucketName",
+        "type": "string",
+        "required": true
+      },
+      {
+        "name": "bucketPassword",
+        "type": "string"
+      },
+      {
+        "name": "username",
+        "type": "string"
+      },
+      {
+        "name": "password",
+        "type": "string"
+      },
+      {
+        "name": "server",
+        "type": "string",
+        "required": true
+      }
+    ],
     "input": [
       {
         "name": "key",
@@ -32,29 +56,8 @@
         "type": "integer",
         "value": 0,
         "required": true
-      },
-      {
-        "name": "server",
-        "type": "string",
-        "required": true
-      },
-      {
-        "name": "username",
-        "type": "string"
-      },
-      {
-        "name": "password",
-        "type": "string"
-      },
-      {
-        "name": "bucket",
-        "type": "string",
-        "required": true
-      },
-      {
-        "name": "bucketPassword",
-        "type": "string"
       }
+      
     ],
     "output": [
       {

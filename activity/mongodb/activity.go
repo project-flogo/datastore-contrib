@@ -59,7 +59,7 @@ func (a *Activity) Eval(ctx activity.Context) (done bool, err error) {
 
 	//res, err := collection.InsertOne(bctx, bson.A{"bar", "world", 3.14159, bson.D{{"qux", 12345}}})
 	output := &Output{}
-	switch input.Method {
+	switch a.settings.Method {
 
 	case methodGet:
 		result := collection.FindOne(bctx, bson.M{input.KeyName: input.KeyValue})
