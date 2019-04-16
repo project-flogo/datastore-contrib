@@ -9,7 +9,8 @@
       {
         "name": "uri",
         "type": "string",
-        "required": true
+        "required": true,
+        "description": "The MongoDB connection URI"
       },
       {
         "name": "method",
@@ -21,41 +22,49 @@
           "UPDATE"
         ],
         "value": "INSERT",
-        "required": true
+        "required": true,
+        "description": "The method type (DELETE, INSERT, UPDATE or REPLACE)"
       }, 
       {
         "name": "dbName",
         "type": "string",
-        "required": true
+        "required": true,
+        "description": "The name of the database "
       },
       {
         "name": "collection",
         "type": "string",
-        "required": true
+        "required": true,
+        "description": "The collection to work on "
       }
     ],
     "input": [
       {
         "name": "keyName",
-        "type": "string"
+        "type": "string",
+        "description": "The name of the key to use when looking up an object (used in DELETE, UPDATE, and REPLACE) "
       },
       {
         "name": "keyValue",
-        "type": "string"
+        "type": "string",
+        "description": "The value of the key to use when looking up an object (used in DELETE, UPDATE, and REPLACE)"
       },
       {
         "name": "data",
-        "type": "object"
+        "type": "object",
+        "description": ""
       }
     ],
     "output": [
       {
         "name": "output",
-        "type": "any"
+        "type": "any",
+        "description": ""
       },
       {
         "name": "count",
-        "type": "integer"
+        "type": "integer",
+        "description": ""
       }
     ]
   }

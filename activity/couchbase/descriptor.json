@@ -9,35 +9,42 @@
       {
         "name": "bucketName",
         "type": "string",
-        "required": true
+        "required": true,
+        "description": "The bucket name "
       },
       {
         "name": "bucketPassword",
-        "type": "string"
+        "type": "string",
+        "description": "The bucket password "
       },
       {
         "name": "username",
-        "type": "string"
+        "type": "string",
+        "description": "Cluster username "
       },
       {
         "name": "password",
-        "type": "string"
+        "type": "string",
+        "description": "Cluster password "
       },
       {
         "name": "server",
         "type": "string",
-        "required": true
+        "required": true,
+        "description": "The Couchbase server (e.g. couchbase://127.0.0.1) "
       }
     ],
     "input": [
       {
         "name": "key",
         "type": "string",
-        "required": true
+        "required": true,
+        "description": "The document key identifier "
       },
       {
         "name": "data",
-        "type": "string"
+        "type": "string",
+        "description": "The document data (when the method is get this field is ignored)"
       },
       {
         "name": "method",
@@ -49,20 +56,23 @@
           "Get"
         ],
         "value": "Insert",
-        "required": true
+        "required": true,
+        "description": "The method type (Insert, Upsert, Remove or Get)   "
       },
       {
         "name": "expiry",
         "type": "integer",
         "value": 0,
-        "required": true
+        "required": true,
+        "description": "The document expiry (default: 0)"
       }
       
     ],
     "output": [
       {
         "name": "output",
-        "type": "any"
+        "type": "any",
+        "description": ""
       }
     ]
   }
