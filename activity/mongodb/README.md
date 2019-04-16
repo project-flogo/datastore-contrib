@@ -38,9 +38,9 @@ The below example allows you to configure the activity to reply and set the outp
     "ref": "github.com/project-flogo/datastore-contrib/activity/mongodb",
     "settings": {
       "uri" : "localhost:27017",
-       "method" : "INSERT",
-        "dbName" : "test",
-        "collection" : "example"
+      "method" : "INSERT",
+      "dbName" : "test",
+      "collection" : "example"
     },
     "input" : {
         "keyName" : "foo",

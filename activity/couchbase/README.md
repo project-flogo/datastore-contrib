@@ -13,21 +13,21 @@ flogo install github.com/project-flogo/datastore-contrib/activity/couchbase
 ### Settings:
 | Name              | Type   | Description
 | :---              | :---   | :---
-| Username          | string |     
-| Password          | string |     
-| BucketName        | string |     
-| BucketPassword    | string |     
-| Server            | string |     
+| Username          | string | Cluster username    
+| Password          | string | Cluster password    
+| BucketName        | string | The bucket name    
+| BucketPassword    | string | The bucket password if any   
+| Server            | string | The Couchbase server (e.g. couchbase://127.0.0.1)    
 
 
 ### Input: 
 
 | Name       | Type   | Description
 | :---       | :---   | :---
-| Key        | string |     
-| Data       | string |     
-| Method     | string |     
-| Expiry     | int32  |     
+| Key        | string | The document key identifier    
+| Data       | string | The document data (when the method is get this field is ignored)    
+| Method     | string | The method type (Insert, Upsert, Remove or Get)    
+| Expiry     | int32  | The document expiry (default: 0)    
 
 ### Output:
 
@@ -49,8 +49,8 @@ The below example allows you to configure the activity to reply and set the outp
       "server" : "http://localhost:8091",
       "username": "Administator",
       "password": "password",
-      "bucketname" : "sample",
-      "bucketpassword" : "",
+      "bucketName" : "sample",
+      "bucketPassword" : "",
     },
     "input" : {
         "key" : "test",

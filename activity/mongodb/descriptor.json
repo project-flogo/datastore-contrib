@@ -32,7 +32,7 @@
         "name": "collection",
         "type": "string",
         "required": true
-      },
+      }
     ],
     "input": [
       {
