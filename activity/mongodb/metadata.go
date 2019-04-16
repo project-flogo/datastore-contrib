@@ -5,39 +5,29 @@ import (
 )
 
 type Settings struct {
-	URI    string `md:"uri,required"`
-	Method string `md:"method,required,allowed(GET,INSERT,UPDATE,DELETE)"`
+	URI        string `md:"uri,required"`
+	Method     string `md:"method,required,allowed(GET,INSERT,UPDATE,DELETE)"`
+	DbName     string `md:"dbName,required"`
+	Collection string `md:"collection"`
 }
 
 type Input struct {
-	DbName     string      `md:"dbName,required"`
-	Collection string      `md:"collection"`
-	KeyName    string      `md:"keyName"`
-	KeyValue   string      `md:"keyValue"`
-	Data       interface{} `md:"data"`
+	KeyName  string      `md:"keyName"`
+	KeyValue string      `md:"keyValue"`
+	Data     interface{} `md:"data"`
 }
 
 func (i *Input) ToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"dbName":     i.DbName,
-		"collection": i.Collection,
-		"keyName":    i.KeyName,
-		"keyValue":   i.KeyValue,
-		"data":       i.Data,
+		"keyName":  i.KeyName,
+		"keyValue": i.KeyValue,
+		"data":     i.Data,
 	}
 }
 
 func (i *Input) FromMap(values map[string]interface{}) error {
 	var err error
 
-	i.DbName, err = coerce.ToString(values["dbName"])
-	if err != nil {
-		return err
-	}
-	i.Collection, err = coerce.ToString(values["collection"])
-	if err != nil {
-		return err
-	}
 	i.KeyName, err = coerce.ToString(values["keyName"])
 	if err != nil {
 		return err

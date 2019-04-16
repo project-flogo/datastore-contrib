@@ -55,7 +55,7 @@ func (a *Activity) Eval(ctx activity.Context) (done bool, err error) {
 		return true, nil
 	}
 
-	collection := client.Database(input.DbName).Collection(input.Collection)
+	collection := client.Database(a.settings.DbName).Collection(a.settings.Collection)
 
 	//res, err := collection.InsertOne(bctx, bson.A{"bar", "world", 3.14159, bson.D{{"qux", 12345}}})
 	output := &Output{}
