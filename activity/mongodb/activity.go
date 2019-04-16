@@ -21,13 +21,26 @@ const (
 func init() {
 	_ = activity.Register(&Activity{}, New)
 }
+
+var collection *mongo.Collection
+var bctx context.Context
+
 func New(ctx activity.InitContext) (activity.Activity, error) {
+
 	s := &Settings{}
 	err := metadata.MapToStruct(ctx.Settings(), s, true)
 	if err != nil {
 		return nil, err
 	}
 	act := &Activity{settings: s}
+
+	bctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
+	client, err := mongo.Connect(bctx, options.Client().ApplyURI(s.URI))
+
+	err = client.Connect(bctx)
+
+	collection = client.Database(s.DbName).Collection(s.Collection)
+
 	return act, nil
 }
 
@@ -45,21 +58,14 @@ func (a *Activity) Metadata() *activity.Metadata {
 // Eval implements api.Activity.Eval - Logs the Message
 func (a *Activity) Eval(ctx activity.Context) (done bool, err error) {
 	logger := ctx.Logger()
-	bctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := mongo.Connect(bctx, options.Client().ApplyURI(a.settings.URI))
-
-	err = client.Connect(bctx)
 	input := &Input{}
 	err = ctx.GetInputObject(input)
 	if err != nil {
 		return true, nil
 	}
-
-	collection := client.Database(input.DbName).Collection(input.Collection)
-
 	//res, err := collection.InsertOne(bctx, bson.A{"bar", "world", 3.14159, bson.D{{"qux", 12345}}})
 	output := &Output{}
-	switch input.Method {
+	switch a.settings.Method {
 
 	case methodGet:
 		result := collection.FindOne(bctx, bson.M{input.KeyName: input.KeyValue})

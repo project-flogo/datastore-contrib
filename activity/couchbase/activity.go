@@ -3,6 +3,8 @@ package couchbase
 import (
 	"fmt"
 
+	"github.com/project-flogo/core/support/log"
+
 	"github.com/project-flogo/core/activity"
 	"github.com/project-flogo/core/data/metadata"
 	"gopkg.in/couchbase/gocb.v1"
@@ -18,13 +20,38 @@ const (
 func init() {
 	_ = activity.Register(&Activity{}, New)
 }
+
+var bucket *gocb.Bucket
+
 func New(ctx activity.InitContext) (activity.Activity, error) {
+	logger := log.ChildLogger(log.RootLogger(), "activity-couchbase")
+
 	s := &Settings{}
 	err := metadata.MapToStruct(ctx.Settings(), s, true)
 	if err != nil {
 		return nil, err
 	}
 	act := &Activity{settings: s}
+
+	cluster, connectError := gocb.Connect(s.Server)
+	if connectError != nil {
+		logger.Errorf("Connection error: %v", connectError)
+		return nil, connectError
+	}
+
+	cluster.Authenticate(gocb.PasswordAuthenticator{
+		Username: s.Username,
+		Password: s.Password,
+	})
+
+	bucket, openBucketError := cluster.OpenBucket(s.BucketName, s.BucketPassword)
+	if openBucketError != nil {
+		logger.Errorf("Error while opening the bucked with the specified credentials: %v", openBucketError)
+		return nil, openBucketError
+	}
+
+	defer bucket.Close()
+
 	return act, nil
 }
 
@@ -49,25 +76,6 @@ func (a *Activity) Eval(ctx activity.Context) (done bool, err error) {
 	if err != nil {
 		return false, err
 	}
-
-	cluster, connectError := gocb.Connect(a.settings.Server)
-	if connectError != nil {
-		logger.Errorf("Connection error: %v", connectError)
-		return false, connectError
-	}
-
-	cluster.Authenticate(gocb.PasswordAuthenticator{
-		Username: a.settings.Username,
-		Password: a.settings.Password,
-	})
-
-	bucket, openBucketError := cluster.OpenBucket(a.settings.BucketName, a.settings.BucketPassword)
-	if openBucketError != nil {
-		logger.Errorf("Error while opening the bucked with the specified credentials: %v", openBucketError)
-		return false, openBucketError
-	}
-
-	defer bucket.Close()
 
 	output := &Output{}
 
