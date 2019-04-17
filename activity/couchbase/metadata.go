@@ -5,29 +5,27 @@ import (
 )
 
 type Settings struct {
-	Username       string `md:"userName"`
-	Password       string `md:"password"`
-	BucketName     string `md:"bucketName,required"`
-	BucketPassword string `md:"bucketPassword"`
-	Server         string `md:"server,required"`
+	Username       string `md:"userName"` // Cluster username
+	Password       string `md:"password"` // Cluster password
+	BucketName     string `md:"bucketName,required"` // The bucket name
+	BucketPassword string `md:"bucketPassword"`      // The bucket password
+	Server         string `md:"server,required"`     // The Couchbase server (e.g. couchbase://127.0.0.1)
+	Method         string `md:"method,required,allowed(Insert,Upsert,Remove,Get)"` // The method type (Insert, Upsert, Remove or Get); (default: *Insert*)
+	Expiry         int    `md:"expiry,required"`     // The document expiry (default: 0)
 }
 type Input struct {
-	Key    string `md:"key,required"`
-	Data   string `md:"data"`
-	Method string `md:"method,required,allowed(Insert,Upsert,Remove,Get)"`
-	Expiry int32  `md:"expiry,required"`
+	Key  string `md:"key,required"` // The document key identifier
+	Data string `md:"data"`         // The document data (when the method is get this field is ignored)
 }
 
 type Output struct {
-	Data interface{} `md:"data"`
+	Data interface{} `md:"data"`    // The result of the method invocation
 }
 
 func (i *Input) ToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"key":    i.Key,
-		"data":   i.Data,
-		"method": i.Method,
-		"expiry": i.Expiry,
+		"key":  i.Key,
+		"data": i.Data,
 	}
 }
 
@@ -39,19 +37,7 @@ func (i *Input) FromMap(values map[string]interface{}) error {
 		return err
 	}
 	i.Data, err = coerce.ToString(values["data"])
-	if err != nil {
-		return err
-	}
-	i.Method, err = coerce.ToString(values["method"])
-	if err != nil {
-		return err
-	}
-	i.Expiry, err = coerce.ToInt32(values["expiry"])
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (o *Output) ToMap() map[string]interface{} {

@@ -4,6 +4,7 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/opentracing/opentracing-go v1.1.0 // indirect
+	github.com/pkg/errors v0.8.1 // indirect
 	github.com/project-flogo/core v0.9.0-beta.3
 	github.com/stretchr/testify v1.3.0
 	go.uber.org/atomic v1.3.2 // indirect
