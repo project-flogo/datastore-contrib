@@ -5,12 +5,12 @@ import (
 )
 
 type Settings struct {
-	URI        string `md:"uri,required"` // The MongoDB connection URI
+	URI        string `md:"uri,required"`                                      // The MongoDB connection URI
 	Method     string `md:"method,required,allowed(GET,INSERT,UPDATE,DELETE)"` // The method type
-	DbName     string `md:"dbName,required"` // The name of the database
-	Collection string `md:"collection, required"` // The collection to work on
-  Username   string `md:"username"` // The username of the client
-	Password   string `md:"password"` // The password of the client
+	DbName     string `md:"dbName,required"`                                   // The name of the database
+	Collection string `md:"collection, required"`                              // The collection to work on
+	Username   string `md:"username"`                                          // The username of the client
+	Password   string `md:"password"`                                          // The password of the client
 }
 
 type Input struct {
@@ -45,13 +45,13 @@ func (i *Input) FromMap(values map[string]interface{}) error {
 }
 
 type Output struct {
-	Data  interface{} `md:"data"`
+	Data interface{} `md:"data"`
 }
 
 func (o *Output) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 
-		"data":  o.Data,
+		"data": o.Data,
 	}
 }
 
