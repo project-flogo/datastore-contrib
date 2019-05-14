@@ -148,7 +148,6 @@ func (a *Activity) Eval(ctx activity.Context) (done bool, err error) {
 			logger.Debugf("Error during deleting data..", err)
 			return true, err
 		}
-
 		logger.Tracef("Delete Count: %d", result.DeletedCount)
 		output.Data = result.DeletedCount
 
