@@ -16,7 +16,9 @@ flogo install github.com/project-flogo/datastore-contrib/activity/mongodb
 | uri      | string | The MongoDB connection URI
 | method   | string | The method type (DELETE, INSERT, UPDATE or REPLACE)
 | dbName     | string | The name of the database 
-| collection | string | The collection to work on      
+| collection | string | The collection to work on
+| username   | string | The username of the client
+| password   | string | The password of the client      
 
 ### Input: 
 
