@@ -34,7 +34,17 @@ func New(ctx activity.InitContext) (activity.Activity, error) {
 	}
 
 	mCtx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := mongo.Connect(mCtx, options.Client().ApplyURI(s.URI))
+
+	opts := options.Client()
+
+	if s.Username != "" && s.Password != "" {
+		opts = opts.SetAuth(options.Credential{
+			Username: s.Username,
+			Password: s.Password,
+		})
+	}
+	client, err := mongo.Connect(mCtx, opts.ApplyURI(s.URI))
+
 	if err != nil {
 		return nil, err
 	}
@@ -117,13 +127,16 @@ func (a *Activity) Eval(ctx activity.Context) (done bool, err error) {
 
 		if input.Data != nil {
 			result, err = a.collection.InsertOne(bCtx, bson.D{input.Data.(bson.E)})
-
+			if err != nil {
+				logger.Debugf("Error during adding data..", err)
+				return true, err
+			}
 		} else {
 			result, err = a.collection.InsertOne(bCtx, bson.M{input.KeyName: input.KeyValue})
-		}
-
-		if err != nil {
-			return true, err
+			if err != nil {
+				logger.Debugf("Error during adding data..", err)
+				return true, err
+			}
 		}
 
 		logger.Tracef("Inserted ID: %v", result.InsertedID)
@@ -132,15 +145,16 @@ func (a *Activity) Eval(ctx activity.Context) (done bool, err error) {
 	case methodDelete:
 		result, err := a.collection.DeleteOne(bCtx, bson.M{input.KeyName: input.KeyValue}, nil)
 		if err != nil {
+			logger.Debugf("Error during deleting data..", err)
 			return true, err
 		}
-
 		logger.Tracef("Delete Count: %d", result.DeletedCount)
 		output.Data = result.DeletedCount
 
 	case methodUpdate:
 		result, err := a.collection.UpdateOne(bCtx, bson.M{input.KeyName: input.KeyValue}, bson.M{"$set": input.Data})
 		if err != nil {
+			logger.Debugf("Error during updating data..", err)
 			return true, err
 		}
 

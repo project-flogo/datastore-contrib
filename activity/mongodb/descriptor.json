@@ -34,7 +34,17 @@
         "name": "collection",
         "type": "string",
         "required": true,
-        "description": "The collection to work on"
+        "description": "The collection to work on "
+      },
+      {
+        "name": "username",
+        "type": "string",
+        "description" : "The username of the client"
+      },
+      {
+        "name": "password",
+        "type": "string",
+        "description" : "The password of the client"
       }
     ],
     "input": [
