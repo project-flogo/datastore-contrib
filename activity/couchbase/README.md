@@ -1,3 +1,7 @@
+<!--
+title: Couchbase
+weight: 4608
+-->
 # Couchbase
 This activity allows you to Get, Insert, Update and Delete a document in couchbase database.
 
@@ -13,7 +17,7 @@ flogo install github.com/project-flogo/datastore-contrib/activity/couchbase
 ### Settings:
 | Name           | Type   | Description
 | :---           | :---   | :---
-| userName       | string | Cluster username    
+| username       | string | Cluster username    
 | password       | string | Cluster password    
 | bucketName     | string | The bucket name    
 | bucketPassword | string | The bucket password if any   
@@ -47,7 +51,7 @@ The below example allows you to configure the activity to insert the value "exam
     "ref": "github.com/project-flogo/datastore-contrib/activity/couchbase",
     "settings": {
       "server" : "http://localhost:8091",
-      "userName": "Administrator",
+      "username": "Administrator",
       "password": "password",
       "bucketName" : "sample",
       "method" : "Insert"
