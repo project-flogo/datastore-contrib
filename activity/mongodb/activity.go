@@ -2,28 +2,28 @@ package mongodb
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/project-flogo/core/activity"
 	"github.com/project-flogo/core/data/metadata"
+	"github.com/project-flogo/core/support/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const (
-	methodGet    = "GET"
-	methodInsert = "INSERT"
-	methodDelete = "DELETE"
-	methodUpdate = "UPDATE"
+	methodUnknown int8 = iota
+	methodGet
+	methodInsert
+	methodDelete
+	methodUpdate
 )
 
 func init() {
 	_ = activity.Register(&Activity{}, New)
 }
-
-var collection *mongo.Collection
-var bctx context.Context
 
 func New(ctx activity.InitContext) (activity.Activity, error) {
 
@@ -32,10 +32,9 @@ func New(ctx activity.InitContext) (activity.Activity, error) {
 	if err != nil {
 		return nil, err
 	}
-	act := &Activity{settings: s}
 
-	bctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
-
+  mCtx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+  
 	opts := options.Client()
 
 	if s.Username != "" && s.Password != "" {
@@ -44,19 +43,27 @@ func New(ctx activity.InitContext) (activity.Activity, error) {
 			Password: s.Password,
 		})
 	}
-	client, err := mongo.Connect(bctx, opts.ApplyURI(s.URI))
+	client, err := mongo.Connect(mCtx, opts.ApplyURI(s.URI))
 
 	if err != nil {
 		return nil, err
 	}
 
-	err = client.Connect(bctx)
+	db := client.Database(s.DbName)
+	collection := db.Collection(s.Collection)
 
-	if err != nil {
-		return nil, err
+	act := &Activity{client: client, collection: collection}
+
+	switch strings.ToLower(s.Method) {
+	case "get":
+		act.method = methodGet
+	case "insert":
+		act.method = methodInsert
+	case "delete":
+		act.method = methodDelete
+	case "update":
+		act.method = methodUpdate
 	}
-
-	collection = client.Database(s.DbName).Collection(s.Collection)
 
 	return act, nil
 }
@@ -64,12 +71,24 @@ func New(ctx activity.InitContext) (activity.Activity, error) {
 var activityMd = activity.ToMetadata(&Settings{}, &Input{}, &Output{})
 
 type Activity struct {
-	settings *Settings
+	client     *mongo.Client
+	collection *mongo.Collection
+	method     int8
 }
 
 // Metadata returns the activity's metadata
 func (a *Activity) Metadata() *activity.Metadata {
 	return activityMd
+}
+
+func (a *Activity) Cleanup() error {
+
+	log.RootLogger().Tracef("cleaning up MongoDB activity")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	return a.client.Disconnect(ctx)
 }
 
 // Eval implements api.Activity.Eval - Logs the Message
@@ -80,55 +99,72 @@ func (a *Activity) Eval(ctx activity.Context) (done bool, err error) {
 	if err != nil {
 		return true, nil
 	}
-	//res, err := collection.InsertOne(bctx, bson.A{"bar", "world", 3.14159, bson.D{{"qux", 12345}}})
 	output := &Output{}
-	switch a.settings.Method {
+
+	//todo consider making timeout a setting
+	bCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	switch a.method {
 
 	case methodGet:
-		result := collection.FindOne(bctx, bson.M{input.KeyName: input.KeyValue})
-
-		logger.Debugf("Result...", result)
-		result.Decode(&output.Data)
+		result := a.collection.FindOne(bCtx, bson.M{input.KeyName: input.KeyValue})
+		err = result.Decode(&output.Data)
+		if err != nil {
+			return true, err
+		}
+		logger.Tracef("Get Result: %v", output.Data)
 
 	case methodInsert:
 
-		if input.Data != nil {
-			res, err := collection.InsertOne(bctx, bson.D{input.Data.(bson.E)})
-
-			if err != nil {
-				return true, err
-			}
-			output.Data = res
-			break
+		if input.Data == nil && input.KeyValue == "" {
+			// should we throw an error or warn?
+			ctx.Logger().Warnf("Nothing to insert")
+			return true, nil
 		}
-		res, err := collection.InsertOne(bctx, bson.M{input.KeyName: input.KeyValue})
+
+		var result *mongo.InsertOneResult
+
+		if input.Data != nil {
+			result, err = a.collection.InsertOne(bCtx, bson.D{input.Data.(bson.E)})
+
+		} else {
+			result, err = a.collection.InsertOne(bCtx, bson.M{input.KeyName: input.KeyValue})
+		}
+
 		if err != nil {
 			return true, err
 		}
-		output.Data = res
+
+		logger.Tracef("Inserted ID: %v", result.InsertedID)
+		output.Data = result.InsertedID
 
 	case methodDelete:
-		result, err := collection.DeleteOne(bctx, bson.M{input.KeyName: input.KeyValue}, nil)
-
+		result, err := a.collection.DeleteOne(bCtx, bson.M{input.KeyName: input.KeyValue}, nil)
 		if err != nil {
 			return true, err
 		}
 
-		logger.Debugf("Result...", result)
-
-		output.Data = result
+		logger.Tracef("Delete Count: %d", result.DeletedCount)
+		output.Data = result.DeletedCount
 
 	case methodUpdate:
-		result, err := collection.UpdateOne(bctx, bson.M{input.KeyName: input.KeyValue}, bson.M{"$set": input.Data})
-
+		result, err := a.collection.UpdateOne(bCtx, bson.M{input.KeyName: input.KeyValue}, bson.M{"$set": input.Data})
 		if err != nil {
 			return true, err
 		}
 
-		logger.Debugf("Result...", result)
+		resultObj := map[string]interface{}{"MatchedCount": result.MatchedCount, "ModifiedCount": result.ModifiedCount,
+			"UpsertedCount": result.UpsertedCount, "UpsertedID": result.UpsertedID}
 
-		output.Data = result
+		logger.Tracef("Update Result: %v", resultObj)
+
+		output.Data = resultObj
 	}
 
+	err = ctx.SetOutputObject(output)
+	if err != nil {
+		return false, err
+	}
 	return true, nil
 }

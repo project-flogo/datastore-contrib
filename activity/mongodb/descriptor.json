@@ -21,15 +21,14 @@
           "INSERT",
           "UPDATE"
         ],
-        "value": "INSERT",
         "required": true,
-        "description": "The method type (DELETE, INSERT, UPDATE or REPLACE)"
+        "description": "The method type (GET, INSERT, UPDATE or DELETE)"
       }, 
       {
         "name": "dbName",
         "type": "string",
         "required": true,
-        "description": "The name of the database "
+        "description": "The name of the database"
       },
       {
         "name": "collection",
@@ -39,40 +38,37 @@
       },
       {
         "name": "username",
-        "type": "string"
+        "type": "string",
+        "description" : "The username of the client"
       },
       {
         "name": "password",
-        "type": "string"
+        "type": "string",
+        "description" : "The password of the client"
       }
     ],
     "input": [
       {
         "name": "keyName",
         "type": "string",
-        "description": "The name of the key to use when looking up an object (used in DELETE, UPDATE, and REPLACE) "
+        "description": "The name of the key to use when looking up an object (used in GET, UPDATE and DELETE)"
       },
       {
         "name": "keyValue",
         "type": "string",
-        "description": "The value of the key to use when looking up an object (used in DELETE, UPDATE, and REPLACE)"
+        "description": "The value of the key to use when looking up an object (used in GET, UPDATE, and DELETE)"
       },
       {
         "name": "data",
         "type": "object",
-        "description": ""
+        "description": "The bson document to insert in mongodb"
       }
     ],
     "output": [
       {
         "name": "output",
         "type": "any",
-        "description": ""
-      },
-      {
-        "name": "count",
-        "type": "integer",
-        "description": ""
+        "description": "The result of the MongoDB method invocation"
       }
     ]
   }

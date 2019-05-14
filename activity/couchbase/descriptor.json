@@ -1,5 +1,5 @@
 {
-    "name": "couchbase",
+    "name": "flogo-couchbase",
     "type": "flogo:activity",
     "version": "5.0.0.0",
     "title": "Couchbase connector",
@@ -10,41 +10,28 @@
         "name": "bucketName",
         "type": "string",
         "required": true,
-        "description": "The bucket name "
+        "description": "The bucket name"
       },
       {
         "name": "bucketPassword",
         "type": "string",
-        "description": "The bucket password "
+        "description": "The bucket password"
       },
       {
         "name": "username",
         "type": "string",
-        "description": "Cluster username "
+        "description": "Cluster username"
       },
       {
         "name": "password",
         "type": "string",
-        "description": "Cluster password "
+        "description": "Cluster password"
       },
       {
         "name": "server",
         "type": "string",
         "required": true,
-        "description": "The Couchbase server (e.g. couchbase://127.0.0.1) "
-      }
-    ],
-    "input": [
-      {
-        "name": "key",
-        "type": "string",
-        "required": true,
-        "description": "The document key identifier "
-      },
-      {
-        "name": "data",
-        "type": "string",
-        "description": "The document data (when the method is get this field is ignored)"
+        "description": "The Couchbase server (e.g. couchbase://127.0.0.1)"
       },
       {
         "name": "method",
@@ -57,22 +44,34 @@
         ],
         "value": "Insert",
         "required": true,
-        "description": "The method type (Insert, Upsert, Remove or Get)   "
+        "description": "The method type (Insert, Upsert, Remove or Get)"
       },
       {
         "name": "expiry",
-        "type": "integer",
+        "type": "int",
         "value": 0,
         "required": true,
-        "description": "The document expiry (default: 0)"
+        "description": "The document expiry; (default: 0)"
       }
-      
+    ],
+    "input": [
+      {
+        "name": "key",
+        "type": "string",
+        "required": true,
+        "description": "The document key identifier"
+      },
+      {
+        "name": "data",
+        "type": "string",
+        "description": "The document data (when the method is get this field is ignored)"
+      }
     ],
     "output": [
       {
         "name": "output",
         "type": "any",
-        "description": ""
+        "description": "The result of the method invocation"
       }
     ]
   }
