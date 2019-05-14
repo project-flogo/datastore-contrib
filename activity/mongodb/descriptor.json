@@ -1,7 +1,7 @@
 {
     "name": "flogo-mongodb",
     "type": "flogo:activity",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "title": "MongoDB",
     "description": "Manage MongoDB documents in a specified collection",
     "homepage": "",

@@ -1,3 +1,7 @@
+<!--
+title: MongoDB
+weight: 4622
+-->
 # MongoDb
 This activity allows you to Get, Insert, Update and Delete a document in MongoDb database.
 
@@ -11,10 +15,10 @@ flogo install github.com/project-flogo/datastore-contrib/activity/mongodb
 ## Configuration
 
 ### Settings:
-| Name     | Type   | Description
-|:---      | :---   | :---    
-| uri      | string | The MongoDB connection URI  - ***REQUIRED***
-| method   | string | The method type (GET, INSERT, UPDATE or DELETE) - ***REQUIRED***
+| Name       | Type   | Description
+|:---        | :---   | :---    
+| uri        | string | The MongoDB connection URI  - ***REQUIRED***
+| method     | string | The method type (GET, INSERT, UPDATE or DELETE) - ***REQUIRED***
 | dbName     | string | The name of the database - ***REQUIRED***
 | collection | string | The collection to work on - ***REQUIRED***  
 | username   | string | The username of the client
