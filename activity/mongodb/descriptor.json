@@ -36,6 +36,14 @@
         "type": "string",
         "required": true,
         "description": "The collection to work on "
+      },
+      {
+        "name": "username",
+        "type": "string"
+      },
+      {
+        "name": "password",
+        "type": "string"
       }
     ],
     "input": [

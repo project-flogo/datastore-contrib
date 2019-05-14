@@ -35,9 +35,26 @@ func New(ctx activity.InitContext) (activity.Activity, error) {
 	act := &Activity{settings: s}
 
 	bctx, _ = context.WithTimeout(context.Background(), 10*time.Second)
-	client, err := mongo.Connect(bctx, options.Client().ApplyURI(s.URI))
+
+	opts := options.Client()
+
+	if s.Username != "" && s.Password != "" {
+		opts = opts.SetAuth(options.Credential{
+			Username: s.Username,
+			Password: s.Password,
+		})
+	}
+	client, err := mongo.Connect(bctx, opts.ApplyURI(s.URI))
+
+	if err != nil {
+		return nil, err
+	}
 
 	err = client.Connect(bctx)
+
+	if err != nil {
+		return nil, err
+	}
 
 	collection = client.Database(s.DbName).Collection(s.Collection)
 

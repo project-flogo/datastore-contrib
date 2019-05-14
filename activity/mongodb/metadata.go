@@ -9,6 +9,8 @@ type Settings struct {
 	Method     string `md:"method,required,allowed(GET,INSERT,UPDATE,DELETE)"`
 	DbName     string `md:"dbName,required"`
 	Collection string `md:"collection"`
+	Username   string `md:"username"`
+	Password   string `md:"password"`
 }
 
 type Input struct {
