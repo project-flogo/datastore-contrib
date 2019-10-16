@@ -1,0 +1,42 @@
+{
+  "name": "mongodb-queryDocument",
+  "title": "mongodb query document",
+  "version": "1.0.0",
+  "author": "TIBCO Software Inc.",
+  "type": "flogo:activity",
+  "description": "Mongodb Query Document activity",
+  "settings": [
+    {
+      "name": "mongoConnection",
+      "type": "object",
+      "required": true
+    },
+    {
+      "name": "operation",
+      "type": "string",
+      "required": true,
+      "allowed": [
+        "Find One Document",
+        "Find Many Documents"
+      ],
+      "value": "Find One Document"
+    },
+    {
+      "name": "collName",
+      "type": "string",
+      "required": true
+    }
+  ],
+  "input":[
+    {
+      "name":"input",
+      "type":"object"
+    }
+  ],
+  "output": [
+    {
+      "name": "Output",
+      "type": "object"
+    }
+  ]
+}
