@@ -3,13 +3,15 @@ package eventlistener
 import (
 	"github.com/project-flogo/core/data/coerce"
 	"github.com/project-flogo/core/support/connection"
-	mongodb "github.com/project-flogo/datastore-contrib/Mongodb/connector/connection"
+	mongodb "github.com/project-flogo/datastore-contrib/mongodb/connector/connection"
 )
 
+// Settings structure
 type Settings struct {
 	Connection connection.Manager `md:"mongodbConnection,required"`
 }
 
+// HandlerSettings structure
 type HandlerSettings struct {
 	Collection   string `md:"collection"`
 	ListenInsert bool   `md:"listenInsert,required"`
@@ -17,11 +19,12 @@ type HandlerSettings struct {
 	ListenRemove bool   `md:"listenRemove,required"`
 }
 
+// Output structure
 type Output struct {
 	Output map[string]interface{} `md:"Output"`
 }
 
-//FromMap method
+// FromMap method
 func (i *HandlerSettings) FromMap(values map[string]interface{}) error {
 	var err error
 

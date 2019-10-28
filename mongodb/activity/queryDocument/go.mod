@@ -1,4 +1,4 @@
-module github.com/project-flogo/datastore-contrib/Mongodb/activity/queryDocument
+module github.com/project-flogo/datastore-contrib/mongodb/activity/queryDocument
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

@@ -3,7 +3,7 @@ package queryDocument
 import (
 	"github.com/project-flogo/core/data/coerce"
 	"github.com/project-flogo/core/support/connection"
-	mongocon "github.com/project-flogo/datastore-contrib/Mongodb/connector/connection"
+	mongocon "github.com/project-flogo/datastore-contrib/mongodb/connector/connection"
 )
 
 // Settings structure

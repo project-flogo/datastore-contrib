@@ -13,6 +13,7 @@ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZN
 github.com/project-flogo/core v0.9.3 h1:uZXHR9j1Byqt+x3faNnOqB8NlEfwE2gpCh40iQ+44oA=
 github.com/project-flogo/core v0.9.3/go.mod h1:QGWi7TDLlhGUaYH3n/16ImCuulbEHGADYEXyrcHhX7U=
 github.com/project-flogo/datastore-contrib v0.0.0-20190703135350-5db404078565 h1:vUqZzZ32uzfwPbJ0CrX8QRfv5FAXuWqPjLLkdh+oysU=
+github.com/project-flogo/datastore-contrib v0.0.0-20191017143643-775871acb4b0 h1:qjGv/X264XURO4sZa1zUa/ZWq+5TIXfMpsWhSeiG+wg=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.3.0 h1:TivCn/peBQ7UY8ooIcPgZFpTNSz0Q2U6UrFlUfqbe0Q=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=

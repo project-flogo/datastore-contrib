@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	mongocon "github.com/project-flogo/datastore-contrib/Mongodb/connector/connection"
+	mongocon "github.com/project-flogo/datastore-contrib/mongodb/connector/connection"
 	// "github.com/TIBCOSoftware/flogo-lib/core/activity"
 	// "github.com/TIBCOSoftware/flogo-lib/core/data"
 	// "github.com/TIBCOSoftware/flogo-lib/logger"

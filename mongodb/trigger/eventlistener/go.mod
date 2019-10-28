@@ -1,4 +1,4 @@
-module github.com/project-flogo/datastore-contrib/Mongodb/trigger/eventlistener
+module github.com/project-flogo/datastore-contrib/mongodb/trigger/eventlistener
 
 require (
 	github.com/go-stack/stack v1.8.0 // indirect
