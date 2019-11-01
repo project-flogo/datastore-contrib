@@ -2,16 +2,13 @@ package queryDocument
 
 import (
 	"github.com/project-flogo/core/data/coerce"
-	"github.com/project-flogo/core/support/connection"
-	mongocon "github.com/project-flogo/datastore-contrib/mongodb/connector/connection"
 )
 
 // Settings structure
 type Settings struct {
-	//JSONDocument interface{}        `md:"jsonDocument,required"`
-	Connection connection.Manager `md:"mongoConnection,required"`
-	Operation  string             `md:"operation,required"`
-	CollName   string             `md:"collName,required"`
+	Connection string `md:"mongoConnection,required"`
+	Operation  string `md:"operation,required"`
+	CollName   string `md:"collName,required"`
 }
 
 //Input structure
@@ -37,7 +34,7 @@ func (i *Settings) FromMap(values map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
-	i.Connection, err = mongocon.GetSharedConfiguration(values["mongoConnection"])
+	i.Connection, err = coerce.ToString(values["mongoConnection"])
 	if err != nil {
 		return err
 	}

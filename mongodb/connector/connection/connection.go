@@ -7,8 +7,6 @@ import (
 	b64 "encoding/base64"
 	"encoding/json"
 	"encoding/pem"
-	"fmt"
-	"os"
 	"strings"
 	"time"
 
@@ -20,7 +18,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var logCache = log.ChildLogger(log.RootLogger(), "mongodb-connection")
+var logmongoconn = log.ChildLogger(log.RootLogger(), "mongodb-connection")
 var factory = &mongodbFactory{}
 
 // Settings struct
@@ -41,17 +39,7 @@ type Settings struct {
 	X509          bool   `md:"X509"`
 }
 
-// type MongodbClientConfig struct {
-// 	Database    string
-// 	MongoClient *mongo.Client
-// }
-
 func init() {
-	if os.Getenv(log.EnvKeyLogLevel) == "DEBUG" {
-		// Enable debug logs for sarama lib
-		// sarama.Logger = dlog.New(os.Stderr, "[flogo-mongodb]", dlog.LstdFlags)
-		// todo
-	}
 	err := connection.RegisterManagerFactory(factory)
 	if err != nil {
 		panic(err)
@@ -73,7 +61,6 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 		return nil, err
 	}
 	if sharedConn.mclient != nil {
-		fmt.Println("returning cache connection===")
 		return sharedConn, nil
 	}
 	opts := options.Client()
@@ -99,8 +86,7 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 		roots := x509.NewCertPool()
 		ok := roots.AppendCertsFromPEM([]byte(rootCert))
 		if !ok {
-			//	panic("failed to parse root certificate")
-			fmt.Println("failed to parse root certificate")
+			logmongoconn.Errorf("Failed to parse root certificate for SSL")
 			//	return nil, err
 		}
 		ClientKey := sharedConn.config.ClientKey
@@ -111,10 +97,6 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 			}
 		} else {
 			KeyPass := sharedConn.config.KeyPass //TODO need to check how password protected keys will be handled by platform
-			//	fmt.Println("ClientKey", ClientKey)
-			//	fmt.Println("ClientCert", ClientCert)
-			fmt.Println("KeyPass", KeyPass)
-
 			keyPEMBlock := parseCert(ClientKey)
 			certPEMBlock := parseCert(ClientCert)
 			var cert tls.Certificate
@@ -122,20 +104,16 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 				var pkey []byte
 				v, _ := pem.Decode([]byte(keyPEMBlock))
 				if v == nil {
-					fmt.Println("not able to decode key")
+					logmongoconn.Warnf("Not able to decode client key")
 				}
 				if v.Type == "RSA PRIVATE KEY" {
-					fmt.Println("key type is rsa private")
-
 					if x509.IsEncryptedPEMBlock(v) {
-						fmt.Println("IsEncryptedPEMBlock")
 						pkey, _ = x509.DecryptPEMBlock(v, []byte(KeyPass))
 						pkey = pem.EncodeToMemory(&pem.Block{
 							Type:  v.Type,
 							Bytes: pkey,
 						})
 					} else {
-						fmt.Println("else IsEncryptedPEMBlock")
 						pkey = pem.EncodeToMemory(v)
 					}
 				}
@@ -144,8 +122,7 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 				cert, err = tls.X509KeyPair([]byte(certPEMBlock), []byte(keyPEMBlock))
 			}
 			if err != nil {
-				//	log.Fatal(err)
-				fmt.Println("error", err)
+				logmongoconn.Errorf("Error while creating client certs for establishing 2 way SSL", err)
 				return nil, err
 			}
 			tlsConfig = &tls.Config{
@@ -166,7 +143,6 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 		opts.SetTLSConfig(tlsConfig)
 
 	}
-	//	fmt.Println("url====", url)
 	client, err := mongo.NewClient(opts.ApplyURI(url))
 	if err != nil {
 		return nil, err
@@ -175,26 +151,28 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 	defer cancel()
 	err = client.Connect(ctx)
 	if err != nil {
-		fmt.Println("===connect error==", err)
+		logmongoconn.Errorf("===connect error==", err)
 		return nil, err
 	}
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		fmt.Println("===ping error==", err)
+		logmongoconn.Errorf("===ping error===", err)
 	} else {
-		fmt.Println("Ping success")
+		logmongoconn.Debugf("===Ping success===")
 		sharedConn.mclient = client
-		fmt.Println("returning new connection===")
+		logmongoconn.Debugf("Returning new mongodb connection")
 	}
 	return sharedConn, nil
 }
 
+// MongodbSharedConfigManager Structure
 type MongodbSharedConfigManager struct {
 	config  *Settings
 	name    string
 	mclient *mongo.Client
 }
 
+// Type of SharedConfigManager
 func (k *MongodbSharedConfigManager) Type() string {
 	return "mongodb"
 }
@@ -209,6 +187,7 @@ func (k *MongodbSharedConfigManager) GetClient() *mongo.Client {
 	return k.mclient
 }
 
+// GetClientConfiguration of mongo connection
 func (k *MongodbSharedConfigManager) GetClientConfiguration() *Settings {
 	return k.config
 }
@@ -218,63 +197,27 @@ func (k *MongodbSharedConfigManager) ReleaseConnection(connection interface{}) {
 
 }
 
+// Start connection manager
 func (k *MongodbSharedConfigManager) Start() error {
 	return nil
 }
 
+// Stop connection manager
 func (k *MongodbSharedConfigManager) Stop() error {
-	logCache.Debug("Cleaning up client cache")
-	//	k.config.MongoClient.Disconnect(context.Background())
-
+	logmongoconn.Debug("Cleaning up client connection cache")
 	return nil
 }
 
+// GetSharedConfiguration function to return MongoDB connection manager
 func GetSharedConfiguration(conn interface{}) (connection.Manager, error) {
 	var cManager connection.Manager
 	var err error
-	//	_, ok := conn.(map[string]interface{})
-	// if ok {
-	// 	//	cManager, err = handleLegacyConnection(conn)
-	// } else {
 	cManager, err = coerce.ToConnection(conn)
-	//	}
-
 	if err != nil {
 		return nil, err
 	}
 	return cManager, nil
 }
-
-// func handleLegacyConnection(conn interface{}) (connection.Manager, error) {
-
-// 	connectionObject, _ := coerce.ToObject(conn)
-// 	if connectionObject == nil {
-// 		return nil, errors.New("Connection object is nil")
-// 	}
-
-// 	id := connectionObject["id"].(string)
-
-// 	cManager := connection.GetManager(id)
-// 	if cManager == nil {
-
-// 		connObject, err := generic.NewConnection(connectionObject)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		cManager, err = factory.NewManager(connObject.Settings())
-// 		if err != nil {
-// 			return nil, err
-// 		}
-
-// 		err = connection.RegisterManager(id, cManager)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 	}
-
-// 	return cManager, nil
-
-// }
 
 func getmongodbClientConfig(settings map[string]interface{}) (*Settings, error) {
 	connectionConfig := &Settings{}
@@ -297,15 +240,11 @@ func parseCert(cert string) string {
 	m := make(map[string]interface{})
 	err := json.Unmarshal([]byte(cert), &m)
 	if err != nil {
-		fmt.Println("=======Error Parsing Json=====", err)
-
+		logmongoconn.Errorf("=======Error Parsing Certificate for SSL handshake=====", err)
 	}
-	//	fmt.Println(m["content"])
 	content := m["content"].(string)
 	lastBin := strings.LastIndex(content, "base64,")
 	sEnc := content[lastBin+7 : len(content)]
-	//	fmt.Printf("substring is: %v\n", sEnc)
 	sDec, _ := b64.StdEncoding.DecodeString(sEnc)
-	//	fmt.Println(string(sDec))
 	return (string(sDec))
 }

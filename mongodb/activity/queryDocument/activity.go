@@ -6,23 +6,16 @@ import (
 	"fmt"
 	"time"
 
-	mongocon "github.com/project-flogo/datastore-contrib/mongodb/connector/connection"
-	// "github.com/TIBCOSoftware/flogo-lib/core/activity"
-	// "github.com/TIBCOSoftware/flogo-lib/core/data"
-	// "github.com/TIBCOSoftware/flogo-lib/logger"
-	//"github.com/TIBCOSoftware/flogo-lib/core/data"
-	//"github.com/TIBCOSoftware/flogo-lib/core/data"
-	// Need to remove this after testing with latest API
 	"github.com/project-flogo/core/activity"
+	"github.com/project-flogo/core/data/coerce"
+	"github.com/project-flogo/core/data/metadata"
 	"github.com/project-flogo/core/support/log"
-
-	//"github.com/project-flogo/core/data/metadata"
-
+	mongocon "github.com/project-flogo/datastore-contrib/mongodb/connector/connection"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// var log = logger.GetLogger("activity-mongodb")
+var logquery = log.ChildLogger(log.RootLogger(), "mongodb-querydocument")
 
 const (
 	connectionProp = "mongoConnection"
@@ -33,7 +26,6 @@ const (
 )
 
 func init() {
-	fmt.Println("Entered the init")
 	err := activity.Register(&Activity{}, New)
 	if err != nil {
 		fmt.Println(err)
@@ -41,38 +33,23 @@ func init() {
 }
 
 // New functioncommon
-func New(ctx1 activity.InitContext) (activity.Activity, error) {
-	fmt.Println("Entered the new method ")
+func New(ctx activity.InitContext) (activity.Activity, error) {
 	settings := &Settings{}
-	//fmt.Println(ctx1.Settings())
-	//fmt.Println("Before Getting the config")
-	settings.Connection, _ = mongocon.GetSharedConfiguration(ctx1.Settings()["mongoConnection"])
-	//fmt.Println(ctx1.Settings()["mongoConnection"])
-	mcon, _ := settings.Connection.(*mongocon.MongodbSharedConfigManager)
-	//	mCtx, _ := ctx.WithTimeout(ctx.Background(), 10*time.Second)
-	client := mcon.GetClient()
-	// opts := options.Client()
+	err := metadata.MapToStruct(ctx.Settings(), settings, true)
+	if err != nil {
+		return nil, err
+	}
+	if settings.Connection != "" {
 
-	// // if s.Username != "" && s.Password != "" {
-	// // 	opts = opts.SetAuth(options.Credential{
-	// // 		Username: s.Username,
-	// // 		Password: s.Password,
-	// // 	})
-	// // }
-	// //fmt.Println("Before connect")
-	// //fmt.Println(mcon.GetClientConfiguration().ConnectionURI)
-	// client, err := mongo.Connect(mCtx, opts.ApplyURI(mcon.GetClientConfiguration().ConnectionURI))
-
-	// if err != nil {
-	// 	fmt.Println("Error creating client")
-	// 	return nil, err
-	// }
-	//fmt.Println(client)
-	//db := client.Database(s.Database)
-	//collection := db.Collection(s.Collection)
-
-	act := &Activity{client: client, operation: ctx1.Settings()["operation"].(string), collectionName: ctx1.Settings()["collName"].(string), database: mcon.GetClientConfiguration().Database}
-	return act, nil
+		mcon, toConnerr := coerce.ToConnection(settings.Connection)
+		if toConnerr != nil {
+			return nil, toConnerr
+		}
+		client := mcon.(*mongocon.MongodbSharedConfigManager).GetClient()
+		act := &Activity{client: client, operation: ctx.Settings()["operation"].(string), collectionName: ctx.Settings()["collName"].(string), database: mcon.(*mongocon.MongodbSharedConfigManager).GetClientConfiguration().Database}
+		return act, nil
+	}
+	return nil, nil
 }
 
 // Activity is a stub for your Activity implementation
@@ -83,10 +60,6 @@ type Activity struct {
 	database       string
 }
 
-// NewActivity inserts a new activity
-// func NewActivity(metadata *activity.Metadata) activity.Activity {
-// 	return &Activity{metadata: metadata}
-// }
 var activityMd = activity.ToMetadata(&Input{}, &Output{})
 
 // Metadata implements activity.Activity.Metadata
@@ -94,18 +67,10 @@ func (a *Activity) Metadata() *activity.Metadata {
 	return activityMd
 }
 
-//GetComplexValue safely get the object value
-// func GetComplexValue(complexObject *data.ComplexObject) interface{} {
-// 	if complexObject != nil {
-// 		return complexObject.Value
-// 	}
-// 	return nil
-// }
-
 //Cleanup method
 func (a *Activity) Cleanup() error {
 
-	log.RootLogger().Tracef("cleaning up MongoDB activity")
+	logquery.Debugf("cleaning up MongoDB activity")
 
 	ctx, cancel := ctx.WithTimeout(ctx.Background(), 30*time.Second)
 	defer cancel()
@@ -115,9 +80,7 @@ func (a *Activity) Cleanup() error {
 
 // Eval implements activity.Activity.Eval
 func (a *Activity) Eval(context activity.Context) (done bool, err error) {
-	//log.Info("Executing  mongodb query Activity")
-	fmt.Println("======Starting Eval=======")
-
+	logquery.Debugf("Executing  mongodb query Activity")
 	method := a.operation
 	if method == "" {
 		return false, activity.NewError("operation is not configured", "MONGODB-1004", nil)
@@ -139,7 +102,7 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 		return false, fmt.Errorf("Error reading input json %s", err.Error())
 	}
 	inputJSON = string(jsonBytes)
-	fmt.Println("inputJSON  : ", inputJSON)
+	logquery.Debugf("InputJSON: ", inputJSON)
 	if err != nil {
 		return false, fmt.Errorf("Error getting mongodb connection %s", err.Error())
 	}
@@ -159,18 +122,15 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 	if inputJSON != "" {
 		err = json.Unmarshal(jsonBytes, &m)
 		if err != nil {
-			fmt.Println("=======Error Parsing Json=====", err)
 			return false, err
 		}
 	}
 	if method == "Find One Document" {
 		result := coll.FindOne(cntx, m)
-		//	result := coll.FindOne(cntx, bson.D{{keyName.(string), keyValue}})
 		err := result.Decode(&val)
 		if err != nil {
 			return false, err
 		}
-		//log.Debugf("Get Results $#v", result)
 		resp["Response"] = val
 
 	} else {
@@ -191,12 +151,10 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 			if err != nil {
 				return false, err
 			}
-			//err = bson.Unmarshal(bsonraw, &val1)
 			if err != nil {
 				return false, err
 			}
 			objects = append(objects, val1)
-			//log.Debugf("Get Results $#v", bsonraw.String())
 			i++
 
 		}

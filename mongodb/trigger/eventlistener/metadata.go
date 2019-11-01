@@ -2,13 +2,11 @@ package eventlistener
 
 import (
 	"github.com/project-flogo/core/data/coerce"
-	"github.com/project-flogo/core/support/connection"
-	mongodb "github.com/project-flogo/datastore-contrib/mongodb/connector/connection"
 )
 
 // Settings structure
 type Settings struct {
-	Connection connection.Manager `md:"mongodbConnection,required"`
+	Connection string `md:"mongodbConnection,required"`
 }
 
 // HandlerSettings structure
@@ -24,7 +22,7 @@ type Output struct {
 	Output map[string]interface{} `md:"Output"`
 }
 
-// FromMap method
+// FromMap method for HandlerSettings
 func (i *HandlerSettings) FromMap(values map[string]interface{}) error {
 	var err error
 
@@ -48,7 +46,7 @@ func (i *HandlerSettings) FromMap(values map[string]interface{}) error {
 	return nil
 }
 
-//ToMap method
+//ToMap method for HandlerSettings
 func (i *HandlerSettings) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"collection":   i.Collection,
@@ -58,11 +56,11 @@ func (i *HandlerSettings) ToMap() map[string]interface{} {
 	}
 }
 
-//FromMap method
+//FromMap method for Settings
 func (i *Settings) FromMap(values map[string]interface{}) error {
 	var err error
 
-	i.Connection, err = mongodb.GetSharedConfiguration(values["mongodbConnection"])
+	i.Connection, err = coerce.ToString(values["mongodbConnection"])
 	if err != nil {
 		return err
 	}
@@ -70,18 +68,21 @@ func (i *Settings) FromMap(values map[string]interface{}) error {
 	return nil
 }
 
-//ToMap method
+// ToMap method for Settings
 func (i *Settings) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"mongodbConnection": i.Connection,
 	}
 }
+
+// ToMap method for Output
 func (o *Output) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"Output": o.Output,
 	}
 }
 
+// FromMap method for Output
 func (o *Output) FromMap(values map[string]interface{}) error {
 
 	var err error
