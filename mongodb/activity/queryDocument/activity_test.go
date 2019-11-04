@@ -31,7 +31,7 @@ var settingsjson = `{
 			}
 		},
 	"operation": "Find One Document",
-	"collName": "testcollection"
+	"collectionName": "testcollection"
 }
 }`
 var settingsjson1 = `{
@@ -48,7 +48,7 @@ var settingsjson1 = `{
 			}
 		},
 	"operation": "Find Many Documents",
-	"collName": "testcollection"
+	"collectionName": "testcollection"
 }
 }`
 

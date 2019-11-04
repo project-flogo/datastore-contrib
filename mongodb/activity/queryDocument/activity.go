@@ -17,14 +17,6 @@ import (
 
 var logquery = log.ChildLogger(log.RootLogger(), "mongodb-querydocument")
 
-const (
-	connectionProp = "mongoConnection"
-	ivOperation    = "operation"
-	outputProperty = "Output"
-	ivInput        = "input"
-	ovCount        = "count"
-)
-
 func init() {
 	err := activity.Register(&Activity{}, New)
 	if err != nil {
@@ -46,7 +38,7 @@ func New(ctx activity.InitContext) (activity.Activity, error) {
 			return nil, toConnerr
 		}
 		client := mcon.(*mongocon.MongodbSharedConfigManager).GetClient()
-		act := &Activity{client: client, operation: ctx.Settings()["operation"].(string), collectionName: ctx.Settings()["collName"].(string), database: mcon.(*mongocon.MongodbSharedConfigManager).GetClientConfiguration().Database}
+		act := &Activity{client: client, operation: settings.Operation, collectionName: settings.CollectionName, database: mcon.(*mongocon.MongodbSharedConfigManager).GetClientConfiguration().Database}
 		return act, nil
 	}
 	return nil, nil
@@ -144,24 +136,18 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 		if err != nil {
 			return false, err
 		}
-		i := 0
 		for cursor.Next(cntx) {
 			val1 := make(map[string]interface{})
 			err := cursor.Decode(&val1)
 			if err != nil {
 				return false, err
 			}
-			if err != nil {
-				return false, err
-			}
 			objects = append(objects, val1)
-			i++
-
 		}
 		resp["Response"] = objects
 	}
 	//outputComplex := &data.ComplexObject{Metadata: "", Value: resp} // Need to remove this after testing
-	context.SetOutput("Output", resp)
+	context.SetOutput("output", resp)
 
 	return true, nil
 }

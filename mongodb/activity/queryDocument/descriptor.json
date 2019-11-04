@@ -1,6 +1,6 @@
 {
   "name": "mongodb-queryDocument",
-  "title": "mongodb query document",
+  "title": "MongoDB Query Document",
   "version": "1.0.0",
   "author": "TIBCO Software Inc.",
   "type": "flogo:activity",
@@ -8,7 +8,7 @@
   "settings": [
     {
       "name": "mongoConnection",
-      "type": "object",
+      "type": "connection",
       "required": true
     },
     {
@@ -22,7 +22,7 @@
       "value": "Find One Document"
     },
     {
-      "name": "collName",
+      "name": "collectionName",
       "type": "string",
       "required": true
     }
@@ -35,7 +35,7 @@
   ],
   "output": [
     {
-      "name": "Output",
+      "name": "output",
       "type": "object"
     }
   ]

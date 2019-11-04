@@ -1,8 +1,9 @@
-package eventlistener
+package mongodbtrigger
 
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/project-flogo/core/data/coerce"
 	"github.com/project-flogo/core/data/metadata"
@@ -64,15 +65,11 @@ type Trigger struct {
 
 // EventListener is structure of a single EventListener
 type EventListener struct {
-	handler      trigger.Handler
-	collName     string
-	listenInsert bool
-	listenUpdate bool
-	listenRemove bool
-	mclient      *mongo.Client
-	database     string
-	done         chan bool
-	logger       log.Logger
+	handler  trigger.Handler
+	settings *HandlerSettings
+	database string
+	done     chan bool
+	logger   log.Logger
 }
 
 // Initialize Mongodb Event Listener
@@ -91,18 +88,14 @@ func (t *Trigger) Initialize(ctx trigger.InitContext) error {
 			return err
 		}
 		evntLsnr := &EventListener{}
+		evntLsnr.settings = s
 		evntLsnr.handler = handler
 		evntLsnr.logger = t.logger
-		evntLsnr.collName = s.Collection
-		evntLsnr.listenInsert = s.ListenInsert
-		evntLsnr.listenUpdate = s.ListenUpdate
-		evntLsnr.listenRemove = s.ListenRemove
-		evntLsnr.mclient = t.mclient
 		evntLsnr.database = config.Database
 		evntLsnr.done = make(chan bool)
 		t.evntLsnrs = append(t.evntLsnrs, evntLsnr)
-		t.logger.Debugf("============collName=== %s", evntLsnr.collName)
-		t.logger.Debugf("========listenInsert=== %b", evntLsnr.listenInsert)
+		t.logger.Debugf("============collName=== %s", evntLsnr.settings.Collection)
+		t.logger.Debugf("========listenInsert=== %b", evntLsnr.settings.ListenInsert)
 
 	}
 
@@ -120,61 +113,53 @@ func (t *Trigger) Start() error {
 	for _, evntLsnr := range t.evntLsnrs {
 		pipeline := mongo.Pipeline{}
 		eventOption := 0
-		if evntLsnr.listenInsert == true && (evntLsnr.listenRemove == false && evntLsnr.listenUpdate == false) {
+		if evntLsnr.settings.ListenInsert && !evntLsnr.settings.ListenRemove && !evntLsnr.settings.ListenUpdate {
 			eventOption = 1
-		} else if evntLsnr.listenUpdate == true && (evntLsnr.listenInsert == false && evntLsnr.listenRemove == false) {
-			eventOption = 2
-		} else if evntLsnr.listenRemove == true && (evntLsnr.listenInsert == false && evntLsnr.listenUpdate == false) {
-			eventOption = 3
-		} else if (evntLsnr.listenInsert == true && evntLsnr.listenUpdate == true) && evntLsnr.listenRemove == false {
-			eventOption = 4
-		} else if (evntLsnr.listenInsert == true && evntLsnr.listenRemove == true) && evntLsnr.listenUpdate == false {
-			eventOption = 5
-		} else if (evntLsnr.listenRemove == true && evntLsnr.listenUpdate == true) && evntLsnr.listenInsert == false {
-			eventOption = 6
-		}
-		t.logger.Debugf("====eventOption=== %d", eventOption)
-		switch eventOption {
-		case 1:
 			pipeline = mongo.Pipeline{bson.D{{"$match",
 				bson.D{{"operationType", "insert"}},
 			}}}
-		case 2:
+		} else if evntLsnr.settings.ListenUpdate && !evntLsnr.settings.ListenInsert && !evntLsnr.settings.ListenRemove {
+			eventOption = 2
 			pipeline = mongo.Pipeline{bson.D{{"$match",
 				bson.D{{"operationType", "update"}},
 			}}}
-		case 3:
+		} else if evntLsnr.settings.ListenRemove && !evntLsnr.settings.ListenInsert && !evntLsnr.settings.ListenUpdate {
+			eventOption = 3
 			pipeline = mongo.Pipeline{bson.D{{"$match",
 				bson.D{{"operationType", "delete"}},
 			}}}
-		case 4:
+		} else if evntLsnr.settings.ListenInsert && evntLsnr.settings.ListenUpdate && !evntLsnr.settings.ListenRemove {
+			eventOption = 4
 			pipeline = mongo.Pipeline{bson.D{{"$match", bson.D{{"$or",
 				bson.A{
 					bson.D{{"operationType", "insert"}},
 					bson.D{{"operationType", "update"}}}}},
 			}}}
-		case 5:
+		} else if evntLsnr.settings.ListenInsert && evntLsnr.settings.ListenRemove && !evntLsnr.settings.ListenUpdate {
+			eventOption = 5
 			pipeline = mongo.Pipeline{bson.D{{"$match", bson.D{{"$or",
 				bson.A{
 					bson.D{{"operationType", "insert"}},
 					bson.D{{"operationType", "delete"}}}}},
 			}}}
-		case 6:
+		} else if evntLsnr.settings.ListenRemove && evntLsnr.settings.ListenUpdate && !evntLsnr.settings.ListenInsert {
+			eventOption = 6
 			pipeline = mongo.Pipeline{bson.D{{"$match", bson.D{{"$or",
 				bson.A{
 					bson.D{{"operationType", "delete"}},
 					bson.D{{"operationType", "update"}}}}},
 			}}}
-		default:
+		} else {
 			pipeline = mongo.Pipeline{}
 		}
-		db := evntLsnr.mclient.Database(evntLsnr.database)
-		coll := db.Collection(evntLsnr.collName)
-
+		fmt.Println("====eventOption=== %d", eventOption)
+		t.logger.Debugf("====eventOption=== %d", eventOption)
+		db := t.mclient.Database(evntLsnr.database)
 		var stream *mongo.ChangeStream
 		var err error
-		if evntLsnr.collName != "" {
-			t.logger.Infof("listening on collection:: %s", evntLsnr.collName)
+		if evntLsnr.settings.Collection != "" {
+			coll := db.Collection(evntLsnr.settings.Collection)
+			t.logger.Infof("listening on collection:: %s", evntLsnr.settings.Collection)
 			stream, err = coll.Watch(context.Background(), pipeline)
 		} else { // listening on database if no collection name specified
 			t.logger.Infof("listening on all collections of database:: %s", evntLsnr.database)
@@ -246,10 +231,10 @@ func (entLsnr *EventListener) process(stringOp string, evntLsnr *EventListener) 
 	outputData.Output = outputRoot
 	_, err = evntLsnr.handler.Handle(context.Background(), outputData)
 	if err != nil {
-		entLsnr.logger.Errorf("Failed to process record from collection [%s], due to error - %s", evntLsnr.collName, err.Error())
+		entLsnr.logger.Errorf("Failed to process record from collection [%s], due to error - %s", evntLsnr.settings.Collection, err.Error())
 	} else {
 		// record is successfully processed.
-		entLsnr.logger.Infof("Record from collection [%s] is successfully processed", evntLsnr.collName)
+		entLsnr.logger.Infof("Record from collection [%s] is successfully processed", evntLsnr.settings.Collection)
 	}
 
 }
@@ -257,10 +242,7 @@ func (entLsnr *EventListener) process(stringOp string, evntLsnr *EventListener) 
 // Stop implements trigger.Trigger.Stop
 func (t *Trigger) Stop() error {
 	t.logger.Infof("Stopping Trigger - %s", t.id)
-	for _, evntLsnr := range t.evntLsnrs {
-		evntLsnr.mclient.Disconnect(context.Background())
-		t.logger.Infof("client disconnected")
-	}
+	t.mclient.Disconnect(context.Background())
 	t.logger.Infof("Trigger - %s  stopped", t.id)
 	return nil
 }

@@ -6,9 +6,9 @@ import (
 
 // Settings structure
 type Settings struct {
-	Connection string `md:"mongoConnection,required"`
-	Operation  string `md:"operation,required"`
-	CollName   string `md:"collName,required"`
+	Connection     string `md:"mongoConnection,required"`
+	Operation      string `md:"operation,required"`
+	CollectionName string `md:"collectionName,required"`
 }
 
 //Input structure
@@ -18,37 +18,8 @@ type Input struct {
 
 //Output structure
 type Output struct {
-	Output interface{} `md:"Output"` //
+	Output interface{} `md:"output"` //
 
-}
-
-//FromMap method
-func (i *Settings) FromMap(values map[string]interface{}) error {
-	var err error
-
-	i.CollName, err = coerce.ToString(values["collName"])
-	if err != nil {
-		return err
-	}
-	i.Operation, err = coerce.ToString(values["operation"])
-	if err != nil {
-		return err
-	}
-	i.Connection, err = coerce.ToString(values["mongoConnection"])
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-//ToMap method
-func (i *Settings) ToMap() map[string]interface{} {
-	return map[string]interface{}{
-		"collName":        i.CollName,
-		"operaton":        i.Operation,
-		"mongoConnection": i.Connection,
-	}
 }
 
 //FromMap method
@@ -73,15 +44,14 @@ func (i *Input) ToMap() map[string]interface{} {
 //ToMap Output
 func (o *Output) ToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"Output": o.Output,
+		"output": o.Output,
 	}
 }
 
 //FromMap Output
 func (o *Output) FromMap(values map[string]interface{}) error {
-
 	var err error
-	o.Output, _ = (values["Output"])
+	o.Output, _ = (values["output"])
 	if err != nil {
 		return err
 	}

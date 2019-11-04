@@ -221,16 +221,10 @@ func GetSharedConfiguration(conn interface{}) (connection.Manager, error) {
 
 func getmongodbClientConfig(settings map[string]interface{}) (*Settings, error) {
 	connectionConfig := &Settings{}
-
-	s := &Settings{}
-
-	err := metadata.MapToStruct(settings, s, false)
-
+	err := metadata.MapToStruct(settings, connectionConfig, false)
 	if err != nil {
 		return nil, err
 	}
-
-	connectionConfig = s
 	return connectionConfig, nil
 }
 

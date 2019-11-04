@@ -1,20 +1,20 @@
 {
     "name": "mongodb-eventlistener",
     "type": "flogo:trigger",
-    "title": "mongodb-eventlistener",
+    "title": "MongoDB Trigger",
     "version": "1.0.0",
     "author": "TIBCO Software Inc.",
     "settings": [
       {
         "name": "mongodbConnection",
-        "type": "object",
+        "type": "connection",
         "required": true
       }
     ],
     "handler": {
       "settings": [
         {
-          "name": "collection",
+          "name": "collectionName",
           "type": "string",
           "required": false
         },
@@ -39,7 +39,7 @@
       ]
     },
     "outputs": [{
-      "name": "Output",
+      "name": "output",
       "type": "object"
     }],
     "actions": [
