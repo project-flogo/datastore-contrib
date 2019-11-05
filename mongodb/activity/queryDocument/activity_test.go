@@ -22,7 +22,7 @@ var settingsjson = `{
 	  "mongoConnection": {
 		"id": "e1e890d0-de91-11e9-aef0-13201957902e",
 		"name": "mongocon",
-		"ref": "git.tibco.com/git/product/ipaas/wi-mongodb.git/src/app/Mongodb/connector/connection",
+		"ref": "github.com/project-flogo/datastore-contrib/mongodb/connection",
 		"settings": {
 			  "Name": "mongocon",
 			  "Description": "",
@@ -39,7 +39,7 @@ var settingsjson1 = `{
 	  "mongoConnection": {
 		"id": "e1e890d0-de91-11e9-aef0-13201957902e",
 		"name": "mongocon",
-		"ref": "git.tibco.com/git/product/ipaas/wi-mongodb.git/src/app/Mongodb/connector/connection",
+		"ref": "github.com/project-flogo/datastore-contrib/mongodb/connection",
 		"settings": {
 			  "Name": "mongocon",
 			  "Description": "",
@@ -72,7 +72,7 @@ func Test_FindOne(t *testing.T) {
 	assert.Nil(t, err1)
 	mf := mapper.NewFactory(resolve.GetBasicResolver())
 
-	support.RegisterAlias("connection", "connection", "git.tibco.com/git/product/ipaas/wi-mongodb.git/src/app/Mongodb/connector/connection")
+	support.RegisterAlias("connection", "connection", "github.com/project-flogo/datastore-contrib/mongodb/connection")
 	fmt.Println("=======Settings========", m["settings"])
 	iCtx := test.NewActivityInitContext(m["settings"], mf)
 	act, err := New(iCtx)
@@ -85,48 +85,48 @@ func Test_FindOne(t *testing.T) {
 	testOutput := tc.GetOutput("Output")
 	jsonOutput, _ := json.Marshal(testOutput)
 	log.RootLogger().Info("jsonOutput is : %s", string(jsonOutput))
-	log.RootLogger().Info("****TEST : Executing Create folder test for testing conflict behavior replace ends****")
+	log.RootLogger().Info("****TEST : Executing Find One ends****")
 	assert.Nil(t, err)
 }
 func Test_FindAll(t *testing.T) {
-	log.RootLogger().Info("****TEST : Executing Find One start****")
+	log.RootLogger().Info("****TEST : Executing Find All start****")
 	m := make(map[string]interface{})
 	err1 := json.Unmarshal([]byte(settingsjson1), &m)
 	assert.Nil(t, err1)
 	mf := mapper.NewFactory(resolve.GetBasicResolver())
-	support.RegisterAlias("connection", "connection", "git.tibco.com/git/product/ipaas/wi-mongodb.git/src/app/Mongodb/connector/connection")
+	support.RegisterAlias("connection", "connection", "github.com/project-flogo/datastore-contrib/mongodb/connection")
 	iCtx := test.NewActivityInitContext(m["settings"], mf)
 	act, err := New(iCtx)
 	assert.Nil(t, err)
 	tc := test.NewActivityContext(act.Metadata())
-	tc.SetInput("input", `{"jsonDocument":{ "empid" : 1 }}`)
+	tc.SetInput("input", `{"jsonDocument":{ "location" : "Hyderabad" }}`)
 
 	_, err = act.Eval(tc)
 	// Getting outputs
 	testOutput := tc.GetOutput("Output")
 	jsonOutput, _ := json.Marshal(testOutput)
 	log.RootLogger().Info("jsonOutput is : %s", string(jsonOutput))
-	log.RootLogger().Info("****TEST : Executing Create folder test for testing conflict behavior replace ends****")
+	log.RootLogger().Info("****TEST : Executing Find All ends****")
 	assert.Nil(t, err)
 }
 func Test_FindMany(t *testing.T) {
-	log.RootLogger().Info("****TEST : Executing Find One start****")
+	log.RootLogger().Info("****TEST : Executing Find Many start****")
 	m := make(map[string]interface{})
 	err1 := json.Unmarshal([]byte(settingsjson1), &m)
 	assert.Nil(t, err1)
 	mf := mapper.NewFactory(resolve.GetBasicResolver())
-	support.RegisterAlias("connection", "connection", "git.tibco.com/git/product/ipaas/wi-mongodb.git/src/app/Mongodb/connector/connection")
+	support.RegisterAlias("connection", "connection", "github.com/project-flogo/datastore-contrib/mongodb/connection")
 	iCtx := test.NewActivityInitContext(m["settings"], mf)
 	act, err := New(iCtx)
 	assert.Nil(t, err)
 
 	tc := test.NewActivityContext(act.Metadata())
-	tc.SetInput("input", `{"jsonDocument":[{ "empid" : 1 },{"empid" : 2 }]}`)
+	tc.SetInput("input", `{"jsonDocument":[{ "location" : "Hyderabad" },{"location" : "Chennai" }]}`)
 	_, err = act.Eval(tc)
 	// Getting outputs
 	testOutput := tc.GetOutput("Output")
 	jsonOutput, _ := json.Marshal(testOutput)
 	log.RootLogger().Info("jsonOutput is : %s", string(jsonOutput))
-	log.RootLogger().Info("****TEST : Executing Create folder test for testing conflict behavior replace ends****")
+	log.RootLogger().Info("****TEST : Executing Find Many ends****")
 	assert.Nil(t, err)
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/project-flogo/core/data/coerce"
 	"github.com/project-flogo/core/data/metadata"
 	"github.com/project-flogo/core/support/log"
-	mongocon "github.com/project-flogo/datastore-contrib/mongodb/connector/connection"
+	mongocon "github.com/project-flogo/datastore-contrib/mongodb/connection"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )

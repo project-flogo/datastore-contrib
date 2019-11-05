@@ -9,7 +9,7 @@ import (
 	"github.com/project-flogo/core/data/metadata"
 	"github.com/project-flogo/core/support/log"
 	"github.com/project-flogo/core/trigger"
-	mongodb "github.com/project-flogo/datastore-contrib/mongodb/connector/connection"
+	mongodb "github.com/project-flogo/datastore-contrib/mongodb/connection"
 	"go.mongodb.org/mongo-driver/bson"
 	mongo "go.mongodb.org/mongo-driver/mongo"
 )

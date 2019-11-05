@@ -1,4 +1,4 @@
-module github.com/project-flogo/datastore-contrib/mongodb/connector/connection
+module github.com/project-flogo/datastore-contrib/mongodb/connection
 
 require (
 	github.com/go-stack/stack v1.8.0 // indirect
