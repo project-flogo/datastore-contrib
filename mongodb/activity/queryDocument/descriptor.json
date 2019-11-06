@@ -29,13 +29,14 @@
   ],
   "input":[
     {
-      "name":"input",
-      "type":"object"
+      "name":"jsonDocument",
+      "type":"object",
+      "required": true
     }
   ],
   "output": [
     {
-      "name": "output",
+      "name": "response",
       "type": "object"
     }
   ]

@@ -89,7 +89,12 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 		return true, nil
 	}
 
-	jsonBytes, err := json.Marshal(inputVal.Input["jsonDocument"])
+	if inputVal.Input == nil {
+		// should we throw an error or warn?
+		logquery.Warnf("Nothing to insert")
+		return true, nil
+	}
+	jsonBytes, err := json.Marshal(inputVal.Input)
 	if err != nil {
 		return false, fmt.Errorf("Error reading input json %s", err.Error())
 	}
@@ -106,11 +111,9 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 	coll := db.Collection(collectionName)
 	cntx, cancel := ctx.WithTimeout(ctx.Background(), 60*time.Second)
 	defer cancel()
-	resp := make(map[string]interface{})
 	val := make(map[string]interface{})
 	m := make(map[string]interface{})
 	var objects []map[string]interface{}
-
 	if inputJSON != "" {
 		err = json.Unmarshal(jsonBytes, &m)
 		if err != nil {
@@ -123,8 +126,7 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 		if err != nil {
 			return false, err
 		}
-		resp["Response"] = val
-
+		context.SetOutput("response", val)
 	} else {
 		var err error
 		var cursor *mongo.Cursor
@@ -144,10 +146,7 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 			}
 			objects = append(objects, val1)
 		}
-		resp["Response"] = objects
+		context.SetOutput("response", objects)
 	}
-	//outputComplex := &data.ComplexObject{Metadata: "", Value: resp} // Need to remove this after testing
-	context.SetOutput("output", resp)
-
 	return true, nil
 }
