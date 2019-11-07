@@ -6,11 +6,12 @@ import (
 
 // Settings structure
 type Settings struct {
-	Connection string `md:"mongodbConnection,required"` // The MongoDB connection
+	Connection string `md:"connection,required"` // The MongoDB connection
 }
 
 // HandlerSettings structure
 type HandlerSettings struct {
+	Database     string `md:"databaseName,required"` // MongoDB Database name
 	Collection   string `md:"collectionName"`        // The collection to listen to for changes. If left blank, listens to all collections in a DB
 	ListenInsert bool   `md:"listenInsert,required"` // Should the trigger listen to Insert events?
 	ListenUpdate bool   `md:"listenUpdate,required"` // Should the trigger listen to Update events?

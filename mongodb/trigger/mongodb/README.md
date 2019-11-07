@@ -17,12 +17,13 @@ flogo install github.com/project-flogo/datastore-contrib/mongodb/trigger/mongodb
 ### Settings:
 | Name                     | Type       | Description
 | :---                     | :---       | :---
-| mongodbConnection        | connection | hoose a MongoDB connection from the drop down  - ***REQUIRED***
+| connection               | connection | Choose a MongoDB connection from the drop down  - ***REQUIRED***
 
 
 ### Handler Settings
 | Name                | Type   | Description
 | :---                | :---   | :---
+| databaseName        | string | MongoDB Database name - ***REQUIRED***
 | collectionName      | string | The collection to listen to for changes. If left blank, listens to all collections in a DB
 | listenInsert        | bool   | Should the trigger listen to Insert events?
 | listenUpdate        | bool   | Should the trigger listen to Update events?
@@ -36,21 +37,23 @@ flogo install github.com/project-flogo/datastore-contrib/mongodb/trigger/mongodb
 | output | object | A JSON object of key value pairs containing the information about the MongoDB event that the trigger is configuerd to listen
 
 ## Example
+The below example shows the values for MongoDB Trigger in the Flogo app JSON as well as the connection object referenced by the trigger. The MongoDB trigger listens to all events of a collection called test in a MongoDB database named sample
 
 ```json
 "triggers": [
   {
-    "ref": "#mongodb",
+    "ref": "github.com/project-flogo/datastore-contrib/mongodb/trigger/mongodb",
     "name": "mongodb-eventlistener",
     "description": "",
     "settings": {
-      "mongodbConnection": "conn://b5002f80-ffe6-11e9-9e1b-1b6d6afda988"
+      "connection": "conn://a7730ae0-0199-11ea-9e1b-1b6d6afda988"
     },
     "id": "MongoDBTrigger",
     "handlers": [
       {
         "description": "",
         "settings": {
+          "databaseName": "sample",
           "collectionName": "test",
           "listenInsert": true,
           "listenUpdate": true,
@@ -59,7 +62,7 @@ flogo install github.com/project-flogo/datastore-contrib/mongodb/trigger/mongodb
         "action": {
           "ref": "github.com/project-flogo/flow",
           "settings": {
-            "flowURI": "res://flow:trigger1"
+            "flowURI": "res://flow:nov8tr"
           },
           "input": {
             "output": "=$.output"
@@ -73,31 +76,30 @@ flogo install github.com/project-flogo/datastore-contrib/mongodb/trigger/mongodb
               "fe_metadata": "{\"$schema\":\"http://json-schema.org/draft-04/schema#\",\"type\":\"object\",\"definitions\":{},\"properties\":{\"NameSpace\":{\"type\":\"object\"},\"OperationType\":{\"type\":\"string\"},\"ResultDocument\":{\"type\":\"object\"}}}"
             }
           }
-         }
+        }
       }
     ]
   }
 ]
 
 "connections": {
-  "b5002f80-ffe6-11e9-9e1b-1b6d6afda988": {
-    "id": "b5002f80-ffe6-11e9-9e1b-1b6d6afda988",
+  "a7730ae0-0199-11ea-9e1b-1b6d6afda988": {
+    "id": "a7730ae0-0199-11ea-9e1b-1b6d6afda988",
     "name": "mc2",
-    "ref": "#connection",
+    "ref": "github.com/project-flogo/datastore-contrib/mongodb/connection",
     "settings": {
-      "Name": "mc2",
-      "Description": "",
-      "ConnectionURI": "<Connection URI Here>",
-      "Database": "<DB Name here>",
-      "CredType": "<One of None or SCRAM-SHA-1 or SCRAM-SHA-256>",
-      "UserName": "<Enter Username here in case of SCRAM-SHA-1 or SCRAM-SHA-256>",
-      "Password": "",
-      "Ssl": false,
-      "X509": false,
-      "TrustCert": "",
-      "ClientCert": "",
-      "ClientKey": "",
-      "KeyPass": "",
+      "name": "mc2",
+      "description": "",
+      "connectionURI": "<Connection URI Here>",
+      "credType": "<One of None or SCRAM-SHA-1 or SCRAM-SHA-256>",
+      "username": "<Enter Username here in case of SCRAM-SHA-1 or SCRAM-SHA-256>",
+      "password": "",
+      "ssl": false,
+      "x509": false,
+      "trustCert": "",
+      "clientCert": "",
+      "clientKey": "",
+      "keyPassword": "",
       }
   }
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/project-flogo/core/data/coerce"
 	"github.com/project-flogo/core/data/metadata"
 	"github.com/project-flogo/core/support/log"
-	mongocon "github.com/project-flogo/datastore-contrib/mongodb/connection"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -20,7 +19,7 @@ var logquery = log.ChildLogger(log.RootLogger(), "mongodb-querydocument")
 func init() {
 	err := activity.Register(&Activity{}, New)
 	if err != nil {
-		fmt.Println(err)
+		logquery.Errorf("MongoDB Query Activity init error : %s ", err.Error())
 	}
 }
 
@@ -37,8 +36,8 @@ func New(ctx activity.InitContext) (activity.Activity, error) {
 		if toConnerr != nil {
 			return nil, toConnerr
 		}
-		client := mcon.(*mongocon.MongodbSharedConfigManager).GetClient()
-		act := &Activity{client: client, operation: settings.Operation, collectionName: settings.CollectionName, database: mcon.(*mongocon.MongodbSharedConfigManager).GetClientConfiguration().Database}
+		client := mcon.GetConnection().(*mongo.Client)
+		act := &Activity{client: client, operation: settings.Operation, collectionName: settings.CollectionName, database: settings.Database, timeout: settings.Timeout}
 		return act, nil
 	}
 	return nil, nil
@@ -50,6 +49,7 @@ type Activity struct {
 	operation      string
 	collectionName string
 	database       string
+	timeout        int32
 }
 
 var activityMd = activity.ToMetadata(&Input{}, &Output{})
@@ -91,7 +91,7 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 
 	if inputVal.Input == nil {
 		// should we throw an error or warn?
-		logquery.Warnf("Nothing to insert")
+		logquery.Warnf("No criteria specified for Query!")
 		return true, nil
 	}
 	jsonBytes, err := json.Marshal(inputVal.Input)
@@ -104,12 +104,14 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 		return false, fmt.Errorf("Error getting mongodb connection %s", err.Error())
 	}
 
-	connectioInfo := a.database
 	client := a.client
-	db := client.Database(connectioInfo)
-
+	db := client.Database(a.database)
+	timeout := a.timeout
+	if timeout == 0 {
+		timeout = 60 //set a default timeout of 60 seconds if no timeout is specified
+	}
 	coll := db.Collection(collectionName)
-	cntx, cancel := ctx.WithTimeout(ctx.Background(), 60*time.Second)
+	cntx, cancel := ctx.WithTimeout(ctx.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
 	val := make(map[string]interface{})
 	m := make(map[string]interface{})

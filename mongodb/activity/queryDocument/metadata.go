@@ -2,14 +2,16 @@ package queryDocument
 
 // Settings structure
 type Settings struct {
-	Connection     string `md:"mongoConnection,required"` // The MongoDB connection
-	Operation      string `md:"operation,required"`       // Operation to perform: Find One Document or Find Many Documents
-	CollectionName string `md:"collectionName,required"`  // Name of collection to query from
+	Connection     string `md:"connection,required"`     // The MongoDB connection
+	Operation      string `md:"operation,required"`      // Operation to perform: Find One Document or Find Many Documents
+	CollectionName string `md:"collectionName,required"` // The collection within the MongoDB database to query
+	Database       string `md:"databaseName,required"`   // MongoDB databse to query
+	Timeout        int32  `md:"timeout"`                 // Timeout in seconds for the activity's operations
 }
 
 //Input structure
 type Input struct {
-	Input interface{} `md:"jsonDocument,required"` // The JSON Request Object that will serve as search parameter for the query
+	Input interface{} `md:"criteria,required"` // The JSON Request Object that will serve as search parameter for the query
 }
 
 //Output structure
@@ -19,14 +21,14 @@ type Output struct {
 
 //FromMap method
 func (i *Input) FromMap(values map[string]interface{}) error {
-	i.Input, _ = values["jsonDocument"]
+	i.Input, _ = values["criteria"]
 	return nil
 }
 
 //ToMap method
 func (i *Input) ToMap() map[string]interface{} {
 	return map[string]interface{}{
-		"jsonDocument": i.Input,
+		"criteria": i.Input,
 	}
 }
 

@@ -12,6 +12,7 @@ import (
 	"github.com/project-flogo/core/support"
 	"github.com/project-flogo/core/support/log"
 	"github.com/project-flogo/core/support/test"
+	_ "github.com/project-flogo/datastore-contrib/mongodb/connection"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,37 +20,43 @@ var activityMetadata *activity.Metadata
 
 var settingsjson = `{
 	"settings": {
-	  "mongoConnection": {
-		"id": "e1e890d0-de91-11e9-aef0-13201957902e",
-		"name": "mongocon",
-		"ref": "github.com/project-flogo/datastore-contrib/mongodb/connection",
-		"settings": {
-			  "Name": "mongocon",
-			  "Description": "",
-			  "ConnectionURI": "mongodb://admin:admin@10.102.169.188:27017",
-			  "Database": "test"
+		"connection": {
+			"id": "e1e890d0-de91-11e9-aef0-13201957902e",
+			"name": "mongocon",
+			"ref": "github.com/project-flogo/datastore-contrib/mongodb/connection",
+			"settings": {
+				"name": "mongocon",
+				"description": "",
+				"connectionURI": "mongodb://apadwal:apadwal@cluster0-shard-00-00-gkxye.mongodb.net:27017,cluster0-shard-00-01-gkxye.mongodb.net:27017,cluster0-shard-00-02-gkxye.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true",
+				"credType": "None",
+				"ssl": false
 			}
 		},
-	"operation": "Find One Document",
-	"collectionName": "testcollection"
-}
+		"operation": "Find One Document",
+        "databaseName": "sample",
+        "collectionName": "test",
+        "timeout": 0
+	}
 }`
 var settingsjson1 = `{
 	"settings": {
-	  "mongoConnection": {
-		"id": "e1e890d0-de91-11e9-aef0-13201957902e",
-		"name": "mongocon",
-		"ref": "github.com/project-flogo/datastore-contrib/mongodb/connection",
-		"settings": {
-			  "Name": "mongocon",
-			  "Description": "",
-			  "ConnectionURI": "mongodb://admin:admin@10.102.169.188:27017",
-			  "Database": "test"
+		"connection": {
+			"id": "e1e890d0-de91-11e9-aef0-13201957902e",
+			"name": "mongocon",
+			"ref": "github.com/project-flogo/datastore-contrib/mongodb/connection",
+			"settings": {
+				"name": "mongocon",
+				"description": "",
+				"connectionURI": "mongodb://admin:admin@10.102.169.188:27017",
+				"credType": "None",
+				"ssl": false
 			}
 		},
-	"operation": "Find Many Documents",
-	"collectionName": "testcollection"
-}
+		"operation": "Find Many Documents",
+        "databaseName": "sample",
+        "collectionName": "test",
+        "timeout": 0
+	}
 }`
 
 func getActivityMetadata() *activity.Metadata {
@@ -78,8 +85,7 @@ func Test_FindOne(t *testing.T) {
 	act, err := New(iCtx)
 	assert.Nil(t, err)
 	tc := test.NewActivityContext(act.Metadata())
-	tc.SetInput("input", `{"jsonDocument":{ "empid" : 1 }}`)
-
+	tc.SetInput("criteria", map[string]string{"location": "Hyderabad"})
 	_, err = act.Eval(tc)
 	// Getting outputs
 	testOutput := tc.GetOutput("Output")
@@ -99,7 +105,7 @@ func Test_FindAll(t *testing.T) {
 	act, err := New(iCtx)
 	assert.Nil(t, err)
 	tc := test.NewActivityContext(act.Metadata())
-	tc.SetInput("input", `{"jsonDocument":{ "location" : "Hyderabad" }}`)
+	tc.SetInput("criteria", map[string]string{"location": "Hyderabad"})
 
 	_, err = act.Eval(tc)
 	// Getting outputs
@@ -121,7 +127,7 @@ func Test_FindMany(t *testing.T) {
 	assert.Nil(t, err)
 
 	tc := test.NewActivityContext(act.Metadata())
-	tc.SetInput("input", `{"jsonDocument":[{ "location" : "Hyderabad" },{"location" : "Chennai" }]}`)
+	tc.SetInput("criteria", `[{"location" : "Hyderabad" },{"location" : "Chennai" }]`)
 	_, err = act.Eval(tc)
 	// Getting outputs
 	testOutput := tc.GetOutput("Output")

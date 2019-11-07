@@ -17,15 +17,17 @@ flogo install github.com/project-flogo/datastore-contrib/mongodb/activity/queryD
 ### Settings:
 | Name                   | Type       | Description
 | :---                   | :---       | :---    
-| mongoConnection        | connection | Choose a MongoDB connection from the drop down  - ***REQUIRED***
+| connection             | connection | Choose a MongoDB connection from the drop down  - ***REQUIRED***
 | operation              | string     | The Query operation type (Find One Document or Find Many Documents) - ***REQUIRED***
-| collectionName         | string     | The collection to work on - ***REQUIRED***  
+| databaseName           | string     | MongoDB databse to query - ***REQUIRED***
+| collectionName         | string     | The collection within the MongoDB database to query - ***REQUIRED***  
+| timeout                | int32      | Timeout in seconds for the activity's operations
 
 ### Input: 
 
 | Name               | Type   | Description
 | :---               | :---   | :---  
-| jsonDocument       | object | The matching critiera entered as a JSON
+| criteria           | object | The matching criteria entered as a JSON
 
 
 ### Output: 
@@ -41,16 +43,18 @@ The below example shows the values for MongoDB Query Document activity in the Fl
 {
   "id": "MongoDBQueryDocument",
   "name": "MongoDBQueryDocument",
- "description": "Mongodb Query Document activity",
- "activity": {
-    "ref": "#queryDocument",
+  "description": "Mongodb Query Document activity",
+  "activity": {
+    "ref": "github.com/project-flogo/datastore-contrib/mongodb/activity/queryDocument",
     "settings": {
-      "mongoConnection": "conn://b5002f80-ffe6-11e9-9e1b-1b6d6afda988",
-      "operation": "Find Many Documents",
-      "collectionName": "test"
+      "connection": "conn://a7730ae0-0199-11ea-9e1b-1b6d6afda988",
+      "operation": "Find One Document",
+      "databaseName": "sample",
+      "collectionName": "test",
+      "timeout": 0
     },
     "input": {
-      "jsonDocument": {
+      "criteria": {
         "location": "Palo Alto"
       }
     }
@@ -58,24 +62,23 @@ The below example shows the values for MongoDB Query Document activity in the Fl
 }
 
 "connections": {
-  "b5002f80-ffe6-11e9-9e1b-1b6d6afda988": {
-    "id": "b5002f80-ffe6-11e9-9e1b-1b6d6afda988",
+  "a7730ae0-0199-11ea-9e1b-1b6d6afda988": {
+    "id": "a7730ae0-0199-11ea-9e1b-1b6d6afda988",
     "name": "mc2",
-    "ref": "#connection",
+    "ref": "github.com/project-flogo/datastore-contrib/mongodb/connection",
     "settings": {
-      "Name": "mc2",
-      "Description": "",
-      "ConnectionURI": "<Connection URI Here>",
-      "Database": "<DB Name here>",
-      "CredType": "<One of None or SCRAM-SHA-1 or SCRAM-SHA-256>",
-      "UserName": "<Enter Username here in case of SCRAM-SHA-1 or SCRAM-SHA-256>",
-      "Password": "",
-      "Ssl": false,
-      "X509": false,
-      "TrustCert": "",
-      "ClientCert": "",
-      "ClientKey": "",
-      "KeyPass": "",
+      "name": "mc2",
+      "description": "",
+      "connectionURI": "<Connection URI Here>",
+      "credType": "<One of None or SCRAM-SHA-1 or SCRAM-SHA-256>",
+      "username": "<Enter Username here in case of SCRAM-SHA-1 or SCRAM-SHA-256>",
+      "password": "",
+      "ssl": false,
+      "x509": false,
+      "trustCert": "",
+      "clientCert": "",
+      "clientKey": "",
+      "keyPassword": "",
       }
   }
 }

@@ -23,20 +23,19 @@ var factory = &mongodbFactory{}
 
 // Settings struct
 type Settings struct {
-	Name          string `md:"Name,required"`
-	Description   string `md:"Description"`
-	ConnectionURI string `md:"ConnectionURI"`
-	Database      string `md:"Database"`
+	Name          string `md:"name,required"`
+	Description   string `md:"description"`
+	ConnectionURI string `md:"connectionURI"`
 	DocsMetadata  string `md:"DocsMetadata"`
-	CredType      string `md:"CredType"`
-	UserName      string `md:"UserName"`
-	Password      string `md:"Password"`
-	Ssl           bool   `md:"Ssl"`
-	TrustCert     string `md:"TrustCert"`
-	ClientKey     string `md:"ClientKey"`
-	ClientCert    string `md:"ClientCert"`
-	KeyPass       string `md:"KeyPass"`
-	X509          bool   `md:"X509"`
+	CredType      string `md:"credType"`
+	UserName      string `md:"username"`
+	Password      string `md:"password"`
+	Ssl           bool   `md:"ssl"`
+	TrustCert     string `md:"trustCert"`
+	ClientKey     string `md:"clientKey"`
+	ClientCert    string `md:"clientCert"`
+	KeyPass       string `md:"keyPassword"`
+	X509          bool   `md:"x509"`
 }
 
 func init() {
@@ -179,17 +178,7 @@ func (k *MongodbSharedConfigManager) Type() string {
 
 // GetConnection ss
 func (k *MongodbSharedConfigManager) GetConnection() interface{} {
-	return k
-}
-
-// GetClient type
-func (k *MongodbSharedConfigManager) GetClient() *mongo.Client {
 	return k.mclient
-}
-
-// GetClientConfiguration of mongo connection
-func (k *MongodbSharedConfigManager) GetClientConfiguration() *Settings {
-	return k.config
 }
 
 // ReleaseConnection ss

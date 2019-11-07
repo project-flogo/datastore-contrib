@@ -3,13 +3,11 @@ package mongodbtrigger
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/project-flogo/core/data/coerce"
 	"github.com/project-flogo/core/data/metadata"
 	"github.com/project-flogo/core/support/log"
 	"github.com/project-flogo/core/trigger"
-	mongodb "github.com/project-flogo/datastore-contrib/mongodb/connection"
 	"go.mongodb.org/mongo-driver/bson"
 	mongo "go.mongodb.org/mongo-driver/mongo"
 )
@@ -42,7 +40,7 @@ func (t *TriggerFactory) New(config *trigger.Config) (trigger.Trigger, error) {
 		if toConnerr != nil {
 			return nil, toConnerr
 		}
-		mclient := mConn.(*mongodb.MongodbSharedConfigManager).GetClient()
+		mclient := mConn.GetConnection().(*mongo.Client)
 		return &Trigger{metadata: t.metadata, settings: settings, id: config.Id, mclient: mclient}, nil
 	}
 	return nil, nil
@@ -70,17 +68,13 @@ type EventListener struct {
 	database string
 	done     chan bool
 	logger   log.Logger
+	stream   *mongo.ChangeStream
 }
 
 // Initialize Mongodb Event Listener
 func (t *Trigger) Initialize(ctx trigger.InitContext) error {
 	t.logger = log.ChildLogger(ctx.Logger(), "mongodb-event-listener")
 	t.logger.Infof("============initializing event listener==")
-	mConn, toConnerr := coerce.ToConnection(t.settings.Connection)
-	if toConnerr != nil {
-		return nil
-	}
-	config := mConn.(*mongodb.MongodbSharedConfigManager).GetClientConfiguration()
 	for _, handler := range ctx.GetHandlers() {
 		s := &HandlerSettings{}
 		err := metadata.MapToStruct(handler.Settings(), s, true)
@@ -91,11 +85,13 @@ func (t *Trigger) Initialize(ctx trigger.InitContext) error {
 		evntLsnr.settings = s
 		evntLsnr.handler = handler
 		evntLsnr.logger = t.logger
-		evntLsnr.database = config.Database
+		evntLsnr.database = evntLsnr.settings.Database
 		evntLsnr.done = make(chan bool)
 		t.evntLsnrs = append(t.evntLsnrs, evntLsnr)
 		t.logger.Debugf("============collName=== %s", evntLsnr.settings.Collection)
 		t.logger.Debugf("========listenInsert=== %b", evntLsnr.settings.ListenInsert)
+		t.logger.Debugf("========listenUpdate=== %b", evntLsnr.settings.ListenUpdate)
+		t.logger.Debugf("========listenRemove=== %b", evntLsnr.settings.ListenRemove)
 
 	}
 
@@ -111,100 +107,111 @@ func (t *Trigger) Metadata() *trigger.Metadata {
 func (t *Trigger) Start() error {
 	t.logger.Infof("Starting Trigger - %s", t.id)
 	for _, evntLsnr := range t.evntLsnrs {
-		pipeline := mongo.Pipeline{}
-		eventOption := 0
-		if evntLsnr.settings.ListenInsert && !evntLsnr.settings.ListenRemove && !evntLsnr.settings.ListenUpdate {
-			eventOption = 1
-			pipeline = mongo.Pipeline{bson.D{{"$match",
-				bson.D{{"operationType", "insert"}},
-			}}}
-		} else if evntLsnr.settings.ListenUpdate && !evntLsnr.settings.ListenInsert && !evntLsnr.settings.ListenRemove {
-			eventOption = 2
-			pipeline = mongo.Pipeline{bson.D{{"$match",
-				bson.D{{"operationType", "update"}},
-			}}}
-		} else if evntLsnr.settings.ListenRemove && !evntLsnr.settings.ListenInsert && !evntLsnr.settings.ListenUpdate {
-			eventOption = 3
-			pipeline = mongo.Pipeline{bson.D{{"$match",
-				bson.D{{"operationType", "delete"}},
-			}}}
-		} else if evntLsnr.settings.ListenInsert && evntLsnr.settings.ListenUpdate && !evntLsnr.settings.ListenRemove {
-			eventOption = 4
-			pipeline = mongo.Pipeline{bson.D{{"$match", bson.D{{"$or",
-				bson.A{
-					bson.D{{"operationType", "insert"}},
-					bson.D{{"operationType", "update"}}}}},
-			}}}
-		} else if evntLsnr.settings.ListenInsert && evntLsnr.settings.ListenRemove && !evntLsnr.settings.ListenUpdate {
-			eventOption = 5
-			pipeline = mongo.Pipeline{bson.D{{"$match", bson.D{{"$or",
-				bson.A{
-					bson.D{{"operationType", "insert"}},
-					bson.D{{"operationType", "delete"}}}}},
-			}}}
-		} else if evntLsnr.settings.ListenRemove && evntLsnr.settings.ListenUpdate && !evntLsnr.settings.ListenInsert {
-			eventOption = 6
-			pipeline = mongo.Pipeline{bson.D{{"$match", bson.D{{"$or",
-				bson.A{
-					bson.D{{"operationType", "delete"}},
-					bson.D{{"operationType", "update"}}}}},
-			}}}
-		} else {
-			pipeline = mongo.Pipeline{}
-		}
-		fmt.Println("====eventOption=== %d", eventOption)
-		t.logger.Debugf("====eventOption=== %d", eventOption)
-		db := t.mclient.Database(evntLsnr.database)
-		var stream *mongo.ChangeStream
-		var err error
-		if evntLsnr.settings.Collection != "" {
-			coll := db.Collection(evntLsnr.settings.Collection)
-			t.logger.Infof("listening on collection:: %s", evntLsnr.settings.Collection)
-			stream, err = coll.Watch(context.Background(), pipeline)
-		} else { // listening on database if no collection name specified
-			t.logger.Infof("listening on all collections of database:: %s", evntLsnr.database)
-			stream, err = db.Watch(context.Background(), pipeline)
-		}
-
+		// Start polling on a separate Go routine so as to not block engine
+		err := evntLsnr.setStream(t.mclient)
 		if err != nil {
-			t.logger.Errorf("Failed to open change stream %s", err)
 			return err
 		}
-		// Start polling on a separate Go routine so as to not block engine
-		go evntLsnr.listen(stream)
+		go evntLsnr.listen()
 	}
 	t.logger.Infof("Trigger - %s  started", t.id)
 	return nil
 }
 
-func (entLsnr *EventListener) listen(stream *mongo.ChangeStream) {
-	entLsnr.logger.Infof("============listening====")
+func (evntLsnr *EventListener) setStream(mclient *mongo.Client) error {
+	pipeline := mongo.Pipeline{}
+
+	if evntLsnr.settings.ListenInsert && !evntLsnr.settings.ListenRemove && !evntLsnr.settings.ListenUpdate {
+
+		pipeline = mongo.Pipeline{bson.D{{"$match",
+			bson.D{{"operationType", "insert"}},
+		}}}
+	} else if evntLsnr.settings.ListenUpdate && !evntLsnr.settings.ListenInsert && !evntLsnr.settings.ListenRemove {
+
+		pipeline = mongo.Pipeline{bson.D{{"$match",
+			bson.D{{"operationType", "update"}},
+		}}}
+	} else if evntLsnr.settings.ListenRemove && !evntLsnr.settings.ListenInsert && !evntLsnr.settings.ListenUpdate {
+
+		pipeline = mongo.Pipeline{bson.D{{"$match",
+			bson.D{{"operationType", "delete"}},
+		}}}
+	} else if evntLsnr.settings.ListenInsert && evntLsnr.settings.ListenUpdate && !evntLsnr.settings.ListenRemove {
+
+		pipeline = mongo.Pipeline{bson.D{{"$match", bson.D{{"$or",
+			bson.A{
+				bson.D{{"operationType", "insert"}},
+				bson.D{{"operationType", "update"}}}}},
+		}}}
+	} else if evntLsnr.settings.ListenInsert && evntLsnr.settings.ListenRemove && !evntLsnr.settings.ListenUpdate {
+
+		pipeline = mongo.Pipeline{bson.D{{"$match", bson.D{{"$or",
+			bson.A{
+				bson.D{{"operationType", "insert"}},
+				bson.D{{"operationType", "delete"}}}}},
+		}}}
+	} else if evntLsnr.settings.ListenRemove && evntLsnr.settings.ListenUpdate && !evntLsnr.settings.ListenInsert {
+
+		pipeline = mongo.Pipeline{bson.D{{"$match", bson.D{{"$or",
+			bson.A{
+				bson.D{{"operationType", "delete"}},
+				bson.D{{"operationType", "update"}}}}},
+		}}}
+	} else {
+		pipeline = mongo.Pipeline{}
+	}
+
+	db := mclient.Database(evntLsnr.database)
+	var stream *mongo.ChangeStream
+	var err error
+	if evntLsnr.settings.Collection != "" {
+		coll := db.Collection(evntLsnr.settings.Collection)
+
+		evntLsnr.logger.Infof("listening on collection:: %s in Database:: %s", evntLsnr.settings.Collection, evntLsnr.database)
+
+		stream, err = coll.Watch(context.Background(), pipeline)
+	} else { // listening on database if no collection name specified
+		evntLsnr.logger.Infof("listening on all collections of database:: %s", evntLsnr.database)
+		stream, err = db.Watch(context.Background(), pipeline)
+	}
+
+	if err != nil {
+		evntLsnr.logger.Errorf("Failed to open change stream %s", err)
+		return err
+	}
+	evntLsnr.stream = stream
+
+	return nil
+}
+
+func (evntLsnr *EventListener) listen() {
+	evntLsnr.logger.Infof("============listening====")
 	for {
 		select {
-		case <-entLsnr.done:
-			entLsnr.logger.Infof("stopped listening...")
+		case <-evntLsnr.done:
+			evntLsnr.logger.Infof("stopped listening...")
 			// Exit
 			return
 		default:
-			//	entLsnr.logger.Infof("done in listening %b", entLsnr.done)
-			ok := stream.Next(context.Background())
+			ok := evntLsnr.stream.Next(context.Background())
 			if ok {
 				var res bson.D
-				err := stream.Decode(&res)
+				err := evntLsnr.stream.Decode(&res)
 				if err != nil {
-					entLsnr.logger.Errorf("got error while decoding stream %s", err)
+					evntLsnr.logger.Errorf("got error while decoding stream %s", err)
 				}
 				if len(res) == 0 {
-					entLsnr.logger.Infof("result is empty, was expecting change document")
+					evntLsnr.logger.Infof("result is empty, was expecting change document")
 				}
-				stringOp := stream.Current.String()
-				go entLsnr.process(stringOp, entLsnr)
+				stringOp := evntLsnr.stream.Current.String()
+				go evntLsnr.process(stringOp)
 			} else {
-				err := stream.Err()
+				err := evntLsnr.stream.Err()
 				if err != nil {
 					//if err is not nil, it means something bad happened, let's finish our func
-					stream.Close(context.Background())
-					entLsnr.logger.Infof("stopped listening...stream closed")
+					evntLsnr.logger.Errorf("Error while listening to the MongoDB event stream %s", err)
+					evntLsnr.stream.Close(context.Background())
+					evntLsnr.logger.Infof("Stopped Listening...stream closed")
 					return
 				}
 			}
@@ -212,13 +219,13 @@ func (entLsnr *EventListener) listen(stream *mongo.ChangeStream) {
 	}
 
 }
-func (entLsnr *EventListener) process(stringOp string, evntLsnr *EventListener) {
-	entLsnr.logger.Infof("started processing record...")
+func (evntLsnr *EventListener) process(stringOp string) {
+	evntLsnr.logger.Infof("started processing record...")
 	var outputRoot = map[string]interface{}{}
 	var jsonOp map[string]interface{}
 	err := json.Unmarshal([]byte(stringOp), &jsonOp)
 	if err != nil {
-		entLsnr.logger.Errorf("got error while unmarshelling %s", err)
+		evntLsnr.logger.Errorf("got error while unmarshelling %s", err)
 		return
 	}
 	outputRoot["NameSpace"] = jsonOp["ns"]
@@ -231,10 +238,10 @@ func (entLsnr *EventListener) process(stringOp string, evntLsnr *EventListener) 
 	outputData.Output = outputRoot
 	_, err = evntLsnr.handler.Handle(context.Background(), outputData)
 	if err != nil {
-		entLsnr.logger.Errorf("Failed to process record from collection [%s], due to error - %s", evntLsnr.settings.Collection, err.Error())
+		evntLsnr.logger.Errorf("Failed to process record from collection [%s], due to error - %s", evntLsnr.settings.Collection, err.Error())
 	} else {
 		// record is successfully processed.
-		entLsnr.logger.Infof("Record from collection [%s] is successfully processed", evntLsnr.settings.Collection)
+		evntLsnr.logger.Infof("Record from collection [%s] in Database [%s] is successfully processed", evntLsnr.settings.Collection, evntLsnr.database)
 	}
 
 }
