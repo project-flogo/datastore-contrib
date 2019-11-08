@@ -128,13 +128,13 @@ func (a *Activity) Eval(ctx activity.Context) (done bool, err error) {
 		if input.Data != nil {
 			result, err = a.collection.InsertOne(bCtx, bson.D{input.Data.(bson.E)})
 			if err != nil {
-				logger.Debugf("Error during adding data..", err)
+				logger.Debugf("Error performing Insert: %v", err)
 				return true, err
 			}
 		} else {
 			result, err = a.collection.InsertOne(bCtx, bson.M{input.KeyName: input.KeyValue})
 			if err != nil {
-				logger.Debugf("Error during adding data..", err)
+				logger.Debugf("Error performing Insert: %v", err)
 				return true, err
 			}
 		}
@@ -145,7 +145,7 @@ func (a *Activity) Eval(ctx activity.Context) (done bool, err error) {
 	case methodDelete:
 		result, err := a.collection.DeleteOne(bCtx, bson.M{input.KeyName: input.KeyValue}, nil)
 		if err != nil {
-			logger.Debugf("Error during deleting data..", err)
+			logger.Debugf("Error performing Delete: %v", err)
 			return true, err
 		}
 		logger.Tracef("Delete Count: %d", result.DeletedCount)
@@ -154,7 +154,7 @@ func (a *Activity) Eval(ctx activity.Context) (done bool, err error) {
 	case methodUpdate:
 		result, err := a.collection.UpdateOne(bCtx, bson.M{input.KeyName: input.KeyValue}, bson.M{"$set": input.Data})
 		if err != nil {
-			logger.Debugf("Error during updating data..", err)
+			logger.Debugf("Error performing Update: %v", err)
 			return true, err
 		}
 

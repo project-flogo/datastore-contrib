@@ -1,0 +1,55 @@
+{
+    "name": "mongodb-eventlistener",
+    "type": "flogo:trigger",
+    "title": "MongoDB Trigger",
+    "version": "0.1.0",
+    "author": "TIBCO Software Inc.",
+    "settings": [
+      {
+        "name": "connection",
+        "type": "connection",
+        "required": true
+      }
+    ],
+    "handler": {
+      "settings": [
+        {
+          "name": "databaseName",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "collectionName",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "listenInsert",
+          "type": "boolean",
+          "required": true,
+          "value": true
+        },
+        {
+          "name": "listenUpdate",
+          "type": "boolean",
+          "required": true,
+          "value": true
+        },
+        {
+          "name": "listenRemove",
+          "type": "boolean",
+          "required": true,
+          "value": true
+        }
+      ]
+    },
+    "outputs": [{
+      "name": "output",
+      "type": "object"
+    }],
+    "actions": [
+      {
+        "name": "Finish"
+      }
+    ]
+  }

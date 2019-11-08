@@ -5,7 +5,7 @@ import (
 )
 
 type Settings struct {
-	Username       string `md:"userName"` // Cluster username
+	Username       string `md:"username"` // Cluster username
 	Password       string `md:"password"` // Cluster password
 	BucketName     string `md:"bucketName,required"` // The bucket name
 	BucketPassword string `md:"bucketPassword"`      // The bucket password
