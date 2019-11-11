@@ -1,0 +1,53 @@
+{
+  "name": "mongodb-removeDocument",
+  "title": "MongoDB Remove Document",
+  "version": "0.1.0",
+  "author": "TIBCO Software Inc.",
+  "type": "flogo:activity",
+  "description": "Mongodb Remove Document activity",
+  "settings": [
+    {
+      "name": "connection",
+      "type": "connection",
+      "required": true
+    },
+    {
+      "name": "operation",
+      "type": "string",
+      "required": true,
+      "allowed": [
+        "Remove One Document",
+        "Remove Many Documents"
+      ],
+      "value": "Remove One Document"
+    },
+    {
+      "name": "databaseName",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "collectionName",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "timeout",
+      "type": "int",
+      "required": false
+    }
+  ],
+  "input":[    
+    {
+      "name":"criteria",
+      "type":"object",
+      "required": true
+    }
+  ],
+  "output": [
+    {
+      "name": "deletedCount",
+      "type": "int"
+    }
+  ]
+}
