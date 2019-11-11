@@ -27,7 +27,7 @@ var settingsjson = `{
 			"settings": {
 				"name": "mongocon",
 				"description": "",
-				"connectionURI": "mongodb://apadwal:apadwal@cluster0-shard-00-00-gkxye.mongodb.net:27017,cluster0-shard-00-01-gkxye.mongodb.net:27017,cluster0-shard-00-02-gkxye.mongodb.net:27017/test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true",
+				"connectionURI": "mongodb://admin:admin@10.102.169.188:27017"
 				"credType": "None",
 				"ssl": false
 			}
@@ -88,9 +88,9 @@ func Test_FindOne(t *testing.T) {
 	tc.SetInput("criteria", map[string]string{"location": "Hyderabad"})
 	_, err = act.Eval(tc)
 	// Getting outputs
-	testOutput := tc.GetOutput("Output")
+	testOutput := tc.GetOutput("response")
 	jsonOutput, _ := json.Marshal(testOutput)
-	log.RootLogger().Info("jsonOutput is : %s", string(jsonOutput))
+	log.RootLogger().Infof("jsonOutput is : %s", string(jsonOutput))
 	log.RootLogger().Info("****TEST : Executing Find One ends****")
 	assert.Nil(t, err)
 }
@@ -109,9 +109,9 @@ func Test_FindAll(t *testing.T) {
 
 	_, err = act.Eval(tc)
 	// Getting outputs
-	testOutput := tc.GetOutput("Output")
+	testOutput := tc.GetOutput("response")
 	jsonOutput, _ := json.Marshal(testOutput)
-	log.RootLogger().Info("jsonOutput is : %s", string(jsonOutput))
+	log.RootLogger().Infof("jsonOutput is : %s", string(jsonOutput))
 	log.RootLogger().Info("****TEST : Executing Find All ends****")
 	assert.Nil(t, err)
 }
@@ -130,9 +130,9 @@ func Test_FindMany(t *testing.T) {
 	tc.SetInput("criteria", `[{"location" : "Hyderabad" },{"location" : "Chennai" }]`)
 	_, err = act.Eval(tc)
 	// Getting outputs
-	testOutput := tc.GetOutput("Output")
+	testOutput := tc.GetOutput("response")
 	jsonOutput, _ := json.Marshal(testOutput)
-	log.RootLogger().Info("jsonOutput is : %s", string(jsonOutput))
+	log.RootLogger().Infof("jsonOutput is : %s", string(jsonOutput))
 	log.RootLogger().Info("****TEST : Executing Find Many ends****")
 	assert.Nil(t, err)
 }
