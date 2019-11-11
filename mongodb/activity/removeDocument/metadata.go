@@ -1,5 +1,9 @@
 package removeDocument
 
+import (
+	"github.com/project-flogo/core/data/coerce"
+)
+
 // Settings structure
 type Settings struct {
 	Connection     string `md:"connection,required"`     // The MongoDB connection
@@ -42,6 +46,10 @@ func (o *Output) ToMap() map[string]interface{} {
 
 //FromMap Output
 func (o *Output) FromMap(values map[string]interface{}) error {
-	o.DeletedCount, _ = (values["deletedCount"].(int64))
+	var err error
+	o.DeletedCount, err = coerce.ToInt64(values["deletedCount"])
+	if err != nil {
+		return err
+	}
 	return nil
 }
