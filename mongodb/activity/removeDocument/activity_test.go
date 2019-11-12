@@ -27,7 +27,7 @@ var settingsjson = `{
 			"settings": {
 				"name": "mongocon",
 				"description": "",
-				"connectionURI": "mongodb://admin:admin@10.102.169.188:27017"
+				"connectionURI": "mongodb://admin:admin@10.102.169.188:27017",
 				"credType": "None",
 				"ssl": false
 			}
@@ -49,7 +49,7 @@ var settingsjson1 = `{
 			"settings": {
 				"name": "mongocon",
 				"description": "",
-				"connectionURI": "mongodb://admin:admin@10.102.169.188:27017"
+				"connectionURI": "mongodb://admin:admin@10.102.169.188:27017",
 				"credType": "None",
 				"ssl": false
 			}

@@ -1,4 +1,4 @@
-package queryDocument
+package updateDocument
 
 import (
 	"encoding/json"
@@ -32,7 +32,7 @@ var settingsjson = `{
 				"ssl": false
 			}
 		},
-		"operation": "Find One Document",
+		"operation": "Update One Document",
         "databaseName": "sample",
         "collectionName": "test",
         "timeout": 0
@@ -52,9 +52,29 @@ var settingsjson1 = `{
 				"ssl": false
 			}
 		},
-		"operation": "Find Many Documents",
+		"operation": "Update Many Documents",
         "databaseName": "sample",
-        "collectionName": "test",
+		"collectionName": "deletetesting",
+        "timeout": 0
+	}
+}`
+var settingsjson2 = `{
+	"settings": {
+		"connection": {
+			"id": "e1e890d0-de91-11e9-aef0-13201957902e",
+			"name": "mongocon",
+			"ref": "github.com/project-flogo/datastore-contrib/mongodb/connection",
+			"settings": {
+				"name": "mongocon",
+				"description": "",
+				"connectionURI": "mongodb://admin:admin@10.102.169.188:27017",
+				"credType": "None",
+				"ssl": false
+			}
+		},
+		"operation": "Replace One Document",
+        "databaseName": "sample",
+		"collectionName": "test",
         "timeout": 0
 	}
 }`
@@ -72,67 +92,75 @@ func getActivityMetadata() *activity.Metadata {
 
 	return activityMetadata
 }
-func Test_FindOne(t *testing.T) {
-	log.RootLogger().Info("****TEST : Executing Find One start****")
+func Test_UpdateOne(t *testing.T) {
+	log.RootLogger().Info("****TEST : Executing Update start****")
 	m := make(map[string]interface{})
 	err1 := json.Unmarshal([]byte(settingsjson), &m)
 	assert.Nil(t, err1)
 	mf := mapper.NewFactory(resolve.GetBasicResolver())
-
 	support.RegisterAlias("connection", "connection", "github.com/project-flogo/datastore-contrib/mongodb/connection")
 	fmt.Println("=======Settings========", m["settings"])
 	iCtx := test.NewActivityInitContext(m["settings"], mf)
 	act, err := New(iCtx)
 	assert.Nil(t, err)
 	tc := test.NewActivityContext(act.Metadata())
-	tc.SetInput("criteria", map[string]string{"location": "abcd"})
+	//Setting inputs
+	tc.SetInput("criteria", map[string]string{"location": "Palo Alto"})
+	tc.SetInput("updateData", map[string]string{"name": "Test Last"})
+
 	_, err = act.Eval(tc)
 	// Getting outputs
-	testOutput := tc.GetOutput("response")
-	jsonOutput, _ := json.Marshal(testOutput)
-	log.RootLogger().Infof("jsonOutput is : %s", string(jsonOutput))
-	log.RootLogger().Info("****TEST : Executing Find One ends****")
+	testOutputMatchedCount := tc.GetOutput("matchedCount").(int64)
+	testOutputModifiedCount := tc.GetOutput("updatedCount").(int64)
+	log.RootLogger().Infof("Update Document output (Matched count) is : %d", testOutputMatchedCount)
+	log.RootLogger().Infof("Update Document output (Updated count) is : %d", testOutputModifiedCount)
 	assert.Nil(t, err)
 }
-func Test_FindAll(t *testing.T) {
-	log.RootLogger().Info("****TEST : Executing Find All start****")
+func Test_UpdateManyPass(t *testing.T) {
+	log.RootLogger().Info("****TEST : Executing Update start****")
 	m := make(map[string]interface{})
 	err1 := json.Unmarshal([]byte(settingsjson1), &m)
 	assert.Nil(t, err1)
 	mf := mapper.NewFactory(resolve.GetBasicResolver())
 	support.RegisterAlias("connection", "connection", "github.com/project-flogo/datastore-contrib/mongodb/connection")
+	fmt.Println("=======Settings========", m["settings"])
 	iCtx := test.NewActivityInitContext(m["settings"], mf)
 	act, err := New(iCtx)
 	assert.Nil(t, err)
 	tc := test.NewActivityContext(act.Metadata())
-	tc.SetInput("criteria", map[string]string{"location": "abcde"})
+	//Setting inputs
+	tc.SetInput("criteria", map[string]string{})
+	tc.SetInput("updateData", map[string]string{"name": "Common Name"})
 
 	_, err = act.Eval(tc)
 	// Getting outputs
-	testOutput := tc.GetOutput("response")
-	jsonOutput, _ := json.Marshal(testOutput)
-	log.RootLogger().Infof("jsonOutput is : %s", string(jsonOutput))
-	log.RootLogger().Info("****TEST : Executing Find All ends****")
+	testOutputMatchedCount := tc.GetOutput("matchedCount").(int64)
+	testOutputModifiedCount := tc.GetOutput("updatedCount").(int64)
+	log.RootLogger().Infof("Update Document output (Matched count) is : %d", testOutputMatchedCount)
+	log.RootLogger().Infof("Update Document output (Updated count) is : %d", testOutputModifiedCount)
 	assert.Nil(t, err)
 }
-func Test_FindMany(t *testing.T) {
-	log.RootLogger().Info("****TEST : Executing Find Many start****")
+
+func Test_ReplacePass(t *testing.T) {
+	log.RootLogger().Info("****TEST : Executing Update start****")
 	m := make(map[string]interface{})
-	err1 := json.Unmarshal([]byte(settingsjson1), &m)
+	err1 := json.Unmarshal([]byte(settingsjson2), &m)
 	assert.Nil(t, err1)
 	mf := mapper.NewFactory(resolve.GetBasicResolver())
 	support.RegisterAlias("connection", "connection", "github.com/project-flogo/datastore-contrib/mongodb/connection")
+	fmt.Println("=======Settings========", m["settings"])
 	iCtx := test.NewActivityInitContext(m["settings"], mf)
 	act, err := New(iCtx)
 	assert.Nil(t, err)
-
 	tc := test.NewActivityContext(act.Metadata())
-	tc.SetInput("criteria", `[{"location" : "Hyderabad" },{"location" : "Chennai" }]`)
+	//Setting inputs
+	tc.SetInput("criteria", map[string]string{"location": "San Jose"})
+	tc.SetInput("updateData", map[string]string{"location": "Seoul"})
 	_, err = act.Eval(tc)
 	// Getting outputs
-	testOutput := tc.GetOutput("response")
-	jsonOutput, _ := json.Marshal(testOutput)
-	log.RootLogger().Infof("jsonOutput is : %s", string(jsonOutput))
-	log.RootLogger().Info("****TEST : Executing Find Many ends****")
+	testOutputMatchedCount := tc.GetOutput("matchedCount").(int64)
+	testOutputModifiedCount := tc.GetOutput("updatedCount").(int64)
+	log.RootLogger().Infof("Update Document output (Matched count) is : %d", testOutputMatchedCount)
+	log.RootLogger().Infof("Update Document output (Updated count) is : %d", testOutputModifiedCount)
 	assert.Nil(t, err)
 }

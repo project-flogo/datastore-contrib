@@ -156,6 +156,7 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 	err = client.Ping(ctx, nil)
 	if err != nil {
 		logmongoconn.Errorf("===ping error===", err)
+		return nil, err
 	} else {
 		logmongoconn.Debugf("===Ping success===")
 		sharedConn.mclient = client

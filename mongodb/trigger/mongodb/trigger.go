@@ -88,7 +88,7 @@ func (t *Trigger) Initialize(ctx trigger.InitContext) error {
 		evntLsnr.database = evntLsnr.settings.Database
 		evntLsnr.done = make(chan bool)
 		t.evntLsnrs = append(t.evntLsnrs, evntLsnr)
-		t.logger.Debugf("============collName=== %s", evntLsnr.settings.Collection)
+		t.logger.Debugf("========Collection Name=== %s", evntLsnr.settings.Collection)
 		t.logger.Debugf("========listenInsert=== %b", evntLsnr.settings.ListenInsert)
 		t.logger.Debugf("========listenUpdate=== %b", evntLsnr.settings.ListenUpdate)
 		t.logger.Debugf("========listenRemove=== %b", evntLsnr.settings.ListenRemove)
@@ -122,40 +122,38 @@ func (evntLsnr *EventListener) setStream(mclient *mongo.Client) error {
 	pipeline := mongo.Pipeline{}
 
 	if evntLsnr.settings.ListenInsert && !evntLsnr.settings.ListenRemove && !evntLsnr.settings.ListenUpdate {
-
 		pipeline = mongo.Pipeline{bson.D{{"$match",
 			bson.D{{"operationType", "insert"}},
 		}}}
 	} else if evntLsnr.settings.ListenUpdate && !evntLsnr.settings.ListenInsert && !evntLsnr.settings.ListenRemove {
-
-		pipeline = mongo.Pipeline{bson.D{{"$match",
-			bson.D{{"operationType", "update"}},
+		pipeline = mongo.Pipeline{bson.D{{"$match", bson.D{{"$or",
+			bson.A{
+				bson.D{{"operationType", "replace"}},
+				bson.D{{"operationType", "update"}}}}},
 		}}}
 	} else if evntLsnr.settings.ListenRemove && !evntLsnr.settings.ListenInsert && !evntLsnr.settings.ListenUpdate {
-
 		pipeline = mongo.Pipeline{bson.D{{"$match",
 			bson.D{{"operationType", "delete"}},
 		}}}
 	} else if evntLsnr.settings.ListenInsert && evntLsnr.settings.ListenUpdate && !evntLsnr.settings.ListenRemove {
-
 		pipeline = mongo.Pipeline{bson.D{{"$match", bson.D{{"$or",
 			bson.A{
 				bson.D{{"operationType", "insert"}},
-				bson.D{{"operationType", "update"}}}}},
+				bson.D{{"operationType", "update"}},
+				bson.D{{"operationType", "replace"}}}}},
 		}}}
 	} else if evntLsnr.settings.ListenInsert && evntLsnr.settings.ListenRemove && !evntLsnr.settings.ListenUpdate {
-
 		pipeline = mongo.Pipeline{bson.D{{"$match", bson.D{{"$or",
 			bson.A{
 				bson.D{{"operationType", "insert"}},
 				bson.D{{"operationType", "delete"}}}}},
 		}}}
 	} else if evntLsnr.settings.ListenRemove && evntLsnr.settings.ListenUpdate && !evntLsnr.settings.ListenInsert {
-
 		pipeline = mongo.Pipeline{bson.D{{"$match", bson.D{{"$or",
 			bson.A{
 				bson.D{{"operationType", "delete"}},
-				bson.D{{"operationType", "update"}}}}},
+				bson.D{{"operationType", "update"}},
+				bson.D{{"operationType", "replace"}}}}},
 		}}}
 	} else {
 		pipeline = mongo.Pipeline{}
@@ -166,9 +164,7 @@ func (evntLsnr *EventListener) setStream(mclient *mongo.Client) error {
 	var err error
 	if evntLsnr.settings.Collection != "" {
 		coll := db.Collection(evntLsnr.settings.Collection)
-
 		evntLsnr.logger.Infof("listening on collection:: %s in Database:: %s", evntLsnr.settings.Collection, evntLsnr.database)
-
 		stream, err = coll.Watch(context.Background(), pipeline)
 	} else { // listening on database if no collection name specified
 		evntLsnr.logger.Infof("listening on all collections of database:: %s", evntLsnr.database)
@@ -230,9 +226,13 @@ func (evntLsnr *EventListener) process(stringOp string) {
 	}
 	outputRoot["NameSpace"] = jsonOp["ns"]
 	outputRoot["OperationType"] = jsonOp["operationType"]
-	outputRoot["ResultDocument"] = jsonOp["fullDocument"]
+	ns := outputRoot["NameSpace"].(map[string]interface{})
 	if jsonOp["operationType"] == "delete" {
 		outputRoot["ResultDocument"] = jsonOp["documentKey"]
+	} else if jsonOp["operationType"] == "update" {
+		outputRoot["ResultDocument"] = jsonOp["updateDescription"]
+	} else {
+		outputRoot["ResultDocument"] = jsonOp["fullDocument"]
 	}
 	outputData := &Output{}
 	outputData.Output = outputRoot
@@ -241,7 +241,7 @@ func (evntLsnr *EventListener) process(stringOp string) {
 		evntLsnr.logger.Errorf("Failed to process record from collection [%s], due to error - %s", evntLsnr.settings.Collection, err.Error())
 	} else {
 		// record is successfully processed.
-		evntLsnr.logger.Infof("Record from collection [%s] in Database [%s] is successfully processed", evntLsnr.settings.Collection, evntLsnr.database)
+		evntLsnr.logger.Infof("Record from collection [%s] in Database [%s] is successfully processed", ns["coll"], evntLsnr.database)
 	}
 
 }
