@@ -1,0 +1,63 @@
+{
+  "name": "mongodb-updateDocument",
+  "title": "MongoDB Update Document",
+  "version": "0.1.0",
+  "author": "TIBCO Software Inc.",
+  "type": "flogo:activity",
+  "description": "Mongodb Update Document activity",
+  "settings": [
+    {
+      "name": "connection",
+      "type": "connection",
+      "required": true
+    },
+    {
+      "name": "operation",
+      "type": "string",
+      "required": true,
+      "allowed": [
+        "Update One Document",
+        "Update Many Documents",
+        "Replace One Document"
+      ],
+      "value": "Update One Document"
+    },
+    {
+      "name": "databaseName",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "collectionName",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "timeout",
+      "type": "int",
+      "required": false
+    }
+  ],
+  "input":[
+    {
+      "name":"criteria",
+      "type":"object",
+      "required": true
+    },
+    {
+      "name":"updateData",
+      "type":"object",
+      "required": true
+    }
+  ],
+  "output": [
+    {
+      "name": "matchedCount",
+      "type": "int"
+    },
+    {
+      "name": "updatedCount",
+      "type": "int"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import (
 	ctx "context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/project-flogo/core/activity"
@@ -126,12 +127,18 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 		result := coll.FindOne(cntx, m)
 		err := result.Decode(&val)
 		if err != nil {
-			return false, err
+			//return false, err
+			if strings.Contains(err.Error(), "no documents in result") {
+				val["QueryError"] = err.Error()
+			} else {
+				return false, err
+			}
 		}
 		context.SetOutput("response", val)
 	} else {
 		var err error
 		var cursor *mongo.Cursor
+		var i = 0
 		if inputJSON == "" {
 			cursor, err = coll.Find(cntx, bson.D{})
 		} else {
@@ -141,6 +148,7 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 			return false, err
 		}
 		for cursor.Next(cntx) {
+			i++
 			val1 := make(map[string]interface{})
 			err := cursor.Decode(&val1)
 			if err != nil {
@@ -148,7 +156,13 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 			}
 			objects = append(objects, val1)
 		}
-		context.SetOutput("response", objects)
+		if i > 0 {
+			context.SetOutput("response", objects)
+		} else {
+			val["QueryError"] = "mongo: no documents in result"
+			context.SetOutput("response", val)
+		}
+
 	}
 	return true, nil
 }
