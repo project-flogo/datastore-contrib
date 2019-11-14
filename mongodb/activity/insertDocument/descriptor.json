@@ -1,0 +1,72 @@
+{
+  "name": "mongodb-insertDocument",
+  "title": "MongoDB Insert Document",
+  "version": "0.1.0",
+  "author": "TIBCO Software Inc.",
+  "type": "flogo:activity",
+  "description": "Mongodb Insert Document activity",
+
+  "settings": [
+    {
+      "name": "connection",
+      "type": "connection",
+      "required": true
+    },
+    {
+      "name": "operation",
+      "type": "string",
+      "required": true,
+      "allowed": [
+        "Insert One Document",
+        "Insert Many Documents"
+      ],
+      "value": "Insert One Document"
+    },
+    {
+      "name": "databaseName",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "collectionName",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "timeout",
+      "type": "number",
+      "required": false
+    },
+    {
+      "name": "continueOnErr",
+      "required": true,
+      "type": "boolean",
+      "value": true
+    }   
+  ],
+  "input" :[
+    {
+      "name": "data",
+      "type": "any",
+      "required": true
+    }
+  ],
+  "output": [
+    {
+      "name": "insertedId",
+      "type": "string"
+    },
+    {
+      "name": "totalCount",
+      "type": "int"
+    },
+    {
+      "name": "successCount",
+      "type": "int"
+    },
+    {
+    "name": "failureCount",
+    "type": "int"
+    }
+  ]
+}
