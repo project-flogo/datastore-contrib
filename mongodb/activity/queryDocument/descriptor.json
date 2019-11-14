@@ -33,7 +33,7 @@
     },
     {
       "name": "timeout",
-      "type": "int",
+      "type": "number",
       "required": false
     }
   ],
