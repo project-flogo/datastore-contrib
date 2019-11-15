@@ -204,11 +204,9 @@ func (evntLsnr *EventListener) listen() {
 			} else {
 				err := evntLsnr.stream.Err()
 				if err != nil {
-					//if err is not nil, it means something bad happened, let's finish our func
-					evntLsnr.logger.Errorf("Error while listening to the MongoDB event stream %s", err)
-					evntLsnr.stream.Close(context.Background())
-					evntLsnr.logger.Infof("Stopped Listening...stream closed")
-					return
+					//if err is not nil, don't stop listening on the event stream in case the connection comes back up.
+					evntLsnr.logger.Errorf("Error while listening to the MongoDB event stream . Detailed Error: %s", err)
+					evntLsnr.logger.Info("This application instance will continue listening on the event stream.")
 				}
 			}
 		}
