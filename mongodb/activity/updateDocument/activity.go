@@ -115,7 +115,7 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 	db := a.client.Database(a.database)
 	coll := db.Collection(a.collectionName)
 	timeout := a.timeout
-	if timeout == 0 {
+	if timeout <= 0 {
 		timeout = 60 //set a default timeout of 60 seconds if no timeout is specified
 	}
 	cntx, cancel := ctx.WithTimeout(ctx.Background(), time.Duration(timeout)*time.Second)
