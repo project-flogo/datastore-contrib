@@ -6,11 +6,11 @@ import (
 
 // Settings structure
 type Settings struct {
-	Connection     string `md:"connection,required"`     // The MongoDB connection
-	Operation      string `md:"operation,required"`      // Operation to perform: Find One Document or Find Many Documents
-	CollectionName string `md:"collectionName,required"` // The collection within the MongoDB database to Remove Documents
-	Database       string `md:"databaseName,required"`   // MongoDB databse to Remove Documents
-	Timeout        int32  `md:"timeout"`                 // Timeout in seconds for the activity's operations
+	Connection     string `md:"connection,required"`                                                   // The MongoDB connection
+	Operation      string `md:"operation,required,allowed(Remove One Document,Remove Many Documents)"` // Operation to perform
+	CollectionName string `md:"collectionName,required"`                                               // The collection within the MongoDB database to Remove Documents
+	Database       string `md:"databaseName,required"`                                                 // MongoDB databse to Remove Documents
+	Timeout        int32  `md:"timeout"`                                                               // Timeout in seconds for the activity's operations
 }
 
 //Input structure
