@@ -1,5 +1,5 @@
 {
-    "name": "mongodb-eventlistener",
+    "name": "mongodb-trigger",
     "type": "flogo:trigger",
     "title": "MongoDB Trigger",
     "version": "0.1.0",

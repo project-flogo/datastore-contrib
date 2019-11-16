@@ -4,11 +4,11 @@ import "github.com/project-flogo/core/data/coerce"
 
 // Settings structure
 type Settings struct {
-	Connection     string `md:"connection,required"`     // The MongoDB connection
-	Operation      string `md:"operation,required"`      // Operation to perform: Update One Document, Update Many Documents or Replace One Document
-	CollectionName string `md:"collectionName,required"` // The collection within the MongoDB database to Update Documents
-	Database       string `md:"databaseName,required"`   // MongoDB databse to Update Documents
-	Timeout        int32  `md:"timeout"`                 // Timeout in seconds for the activity's operations
+	Connection     string `md:"connection,required"`                                                                        // The MongoDB connection
+	Operation      string `md:"operation,required,allowed(Update One Document,Update Many Documents,Replace One Document)"` // Operation to perform
+	CollectionName string `md:"collectionName,required"`                                                                    // The collection within the MongoDB database to Update Documents
+	Database       string `md:"databaseName,required"`                                                                      // MongoDB databse to Update Documents
+	Timeout        int32  `md:"timeout"`                                                                                    // Timeout in seconds for the activity's operations
 }
 
 //Input structure

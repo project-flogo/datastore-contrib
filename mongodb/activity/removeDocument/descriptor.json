@@ -33,8 +33,9 @@
     },
     {
       "name": "timeout",
-      "type": "int",
-      "required": false
+      "type": "number",
+      "required": false,
+      "value": 30
     }
   ],
   "input":[    

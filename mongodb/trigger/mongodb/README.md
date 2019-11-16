@@ -43,7 +43,7 @@ The below example shows the values for MongoDB Trigger in the Flogo app JSON as 
 "triggers": [
   {
     "ref": "github.com/project-flogo/datastore-contrib/mongodb/trigger/mongodb",
-    "name": "mongodb-eventlistener",
+    "name": "mongodb-trigger",
     "description": "",
     "settings": {
       "connection": "conn://a7730ae0-0199-11ea-9e1b-1b6d6afda988"

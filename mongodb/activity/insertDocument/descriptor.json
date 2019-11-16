@@ -1,10 +1,11 @@
 {
-  "name": "mongodb-queryDocument",
-  "title": "MongoDB Query Document",
+  "name": "mongodb-insertDocument",
+  "title": "MongoDB Insert Document",
   "version": "0.1.0",
   "author": "TIBCO Software Inc.",
   "type": "flogo:activity",
-  "description": "Mongodb Query Document activity",
+  "description": "Mongodb Insert Document activity",
+
   "settings": [
     {
       "name": "connection",
@@ -16,10 +17,10 @@
       "type": "string",
       "required": true,
       "allowed": [
-        "Find One Document",
-        "Find Many Documents"
+        "Insert One Document",
+        "Insert Many Documents"
       ],
-      "value": "Find One Document"
+      "value": "Insert One Document"
     },
     {
       "name": "databaseName",
@@ -36,19 +37,37 @@
       "type": "number",
       "required": false,
       "value": 30
-    }
-  ],
-  "input":[
+    },
     {
-      "name":"criteria",
-      "type":"object",
+      "name": "continueOnErr",
+      "required": true,
+      "type": "boolean",
+      "value": true
+    }   
+  ],
+  "input" :[
+    {
+      "name": "data",
+      "type": "any",
       "required": true
     }
   ],
   "output": [
     {
-      "name": "response",
-      "type": "object"
+      "name": "insertedId",
+      "type": "string"
+    },
+    {
+      "name": "totalCount",
+      "type": "int"
+    },
+    {
+      "name": "successCount",
+      "type": "int"
+    },
+    {
+    "name": "failureCount",
+    "type": "int"
     }
   ]
 }
