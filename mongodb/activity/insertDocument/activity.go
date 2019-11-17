@@ -166,7 +166,7 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 				and there was an error in one of the inserts, there is no good way to handle this case.
 				Users will see incorrect data in the output.
 				*/
-				logInsert.Warn(
+				logInsert.Warnf(
 					"Error encountered during Insert Many Documents with Continue on Error set to false."+
 						"Users should check the mongoDB backend for the result of this particular execution for clarity."+
 						"Original error for reference : [%s] ", msg)
