@@ -28,15 +28,18 @@ flogo install github.com/project-flogo/datastore-contrib/neo4j/connection
 A sample Neo4j connection
 
 ```json
-{
- "settings": {
- "name": "neo4jCon",
- "description": "",
- "connectionURI": "bolt://localhost:7687",
- "credType": "None",
- "username": "username",
- "password": "password"
-}
+"connections": {
+  "neo4jcon": {
+    "ref": "github.com/project-flogo/datastore-contrib/neo4j/connection",
+    "settings": {
+				"name": "neo4jcon",
+				"description": "",
+				"connectionURI": "bolt://localhost:7687",
+				"credType": "None",
+				"username": "",
+				"password": ""
+	}
+  }
 }
 ```
 

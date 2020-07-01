@@ -1,4 +1,4 @@
-module github.com/vpawar-ai/datastore-contrib/neo4j
+module github.com/project-flogo/datastore-contrib/neo4j
 
 go 1.13
 

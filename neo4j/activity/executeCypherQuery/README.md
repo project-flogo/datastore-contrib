@@ -37,6 +37,34 @@ flogo install github.com/project-flogo/datastore-contrib/neo4j/activity/executeC
 
 ```json
 {
-  
+            "id": "executeCypherQuery_2",
+            "name": "Neo4j Execute Cypher Query",
+            "description": "Neo4j Execute Cypher Query activity",
+            "activity": {
+              "ref": "#executeCypherQuery",
+              "input": {
+                "cypherQuery": "MATCH (n) RETURN n LIMIT 25"
+              },
+              "settings": {
+                "accessMode": "Read",
+                "databaseName": "neo4j",
+                "connection": "conn://neo4jcon"
+              }
+            }
 }
+
+"connections": {
+  "neo4jcon": {
+    "ref": "github.com/project-flogo/datastore-contrib/neo4j/connection",
+    "settings": {
+				"name": "neo4jcon",
+				"description": "",
+				"connectionURI": "bolt://localhost:7687",
+				"credType": "None",
+				"username": "",
+				"password": ""
+	}
+  }
+}
+
 ```
