@@ -1,0 +1,46 @@
+{
+  "name": "neo4j-executeCypherQuery",
+  "title": "Neo4j Execute Cypher Query",
+  "version": "0.1.0",
+  "author": "TIBCO Software Inc.",
+  "type": "flogo:activity",
+  "description": "Neo4j Execute Cypher Query activity",
+  "settings": [
+    {
+      "name": "connection",
+      "type": "connection",
+      "required": true
+    },
+    {
+      "name": "databaseName",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "accessMode",
+      "type": "string",
+      "required": true,
+      "allowed": [
+				"Read",
+				"Write"
+			]
+    }
+  ],
+  "input":[
+    {
+      "name": "cypherQuery",
+      "type": "string",
+      "required": true
+    },
+    {
+      "name": "queryParams",
+      "type": "object"
+    }
+  ],
+  "output": [
+    {
+      "name": "response",
+      "type": "object"
+    }
+  ]
+}
