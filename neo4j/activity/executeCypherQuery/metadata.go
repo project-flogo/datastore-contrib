@@ -24,9 +24,13 @@ type Output struct {
 
 //FromMap method
 func (i *Input) FromMap(values map[string]interface{}) error {
-	i.CypherQuery, _ = coerce.ToString(values["cypherQuery"])
-	i.QueryParams, _ = coerce.ToObject(values["queryParams"])
-	return nil
+	var err error
+	i.CypherQuery, err = coerce.ToString(values["cypherQuery"])
+	if err != nil {
+		return err
+	}
+	i.QueryParams, err = coerce.ToObject(values["queryParams"])
+	return err
 }
 
 //ToMap method
@@ -47,7 +51,7 @@ func (o *Output) ToMap() map[string]interface{} {
 //FromMap Output
 func (o *Output) FromMap(values map[string]interface{}) error {
 	var err error
-	o.Output, _ = (values["response"])
+	o.Output, err = (values["response"])
 	if err != nil {
 		return err
 	}
