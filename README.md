@@ -9,6 +9,7 @@ A collection of Datastore related Flogo contributions.  This repository consists
 ### Activities
 * [couchbase](activity/couchbase): Couchbase 
 * [mongodb](activity/mongodb): MongoDB
+* [neo4j](activity/neo4j): Neo4j
 
 ## Contributing and support
 

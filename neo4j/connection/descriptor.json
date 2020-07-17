@@ -1,0 +1,44 @@
+{
+	"name": "neo4j-connector",
+	"title": "Neo4j Connector",
+	"author": "TIBCO Software Inc.",
+	"type": "flogo:connector",
+	"version": "0.1.0",
+	"settings": [
+		{
+			"name": "name",
+			"type": "string",
+			"required": true
+		},
+		{
+			"name": "description",
+			"type": "string"
+		},
+		{
+			"name": "connectionURI",
+			"type": "string",
+			"required": true,
+			"value": "bolt://localhost:7687"
+		},
+		{
+			"name": "credType",
+			"type": "string",
+			"required": true,
+			"allowed": [
+				"None",
+				"BasicAuth"
+			],
+			"value": "None"
+		},
+		{
+			"name": "username",
+			"type": "string",
+			"required": false
+		},
+		{
+			"name": "password",
+			"type": "password",
+			"required": false
+		}
+	]
+}
