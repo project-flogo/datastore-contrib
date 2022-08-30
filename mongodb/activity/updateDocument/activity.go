@@ -35,9 +35,11 @@ func New(ctx activity.InitContext) (activity.Activity, error) {
 		if toConnerr != nil {
 			return nil, toConnerr
 		}
-		client := mcon.GetConnection().(*mongo.Client)
+		sharedConn := mcon.GetConnection().(map[string]interface{})
+		client := sharedConn["mclient"].(*mongo.Client)
+		connected := sharedConn["connected"].(bool)
 		act := &Activity{client: client, operation: settings.Operation, collectionName: settings.CollectionName,
-			database: settings.Database, timeout: settings.Timeout}
+			database: settings.Database, timeout: settings.Timeout, connected: connected}
 		return act, nil
 	}
 
@@ -67,6 +69,7 @@ type Activity struct {
 	collectionName string
 	database       string
 	timeout        int32
+	connected      bool
 }
 
 // Eval implements activity.Activity.Eval
@@ -112,6 +115,20 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 			return false, err
 		}
 	}
+
+	if !a.connected {
+		ctx, cancel := ctx.WithTimeout(ctx.Background(), 35*time.Second)
+		defer cancel()
+		err = a.client.Ping(ctx, nil)
+		if err != nil {
+			logUpdate.Errorf("===ping error===")
+			return false, activity.NewRetriableError(fmt.Sprintf("Failed to ping to server due to error - {%s}", err.Error()), "", nil)
+		} else {
+			logUpdate.Debugf("===Ping success===")
+			a.connected = true
+		}
+	}
+
 	db := a.client.Database(a.database)
 	coll := db.Collection(a.collectionName)
 	timeout := a.timeout

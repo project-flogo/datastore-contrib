@@ -146,7 +146,7 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 	if err != nil {
 		return nil, err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
 	defer cancel()
 	err = client.Connect(ctx)
 	if err != nil {
@@ -155,11 +155,18 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 	}
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		logmongoconn.Errorf("===ping error===", err)
-		return nil, err
+		if strings.Contains(strings.ToLower(err.Error()), "bad auth") {
+			logmongoconn.Errorf("===ping error===", err)
+			return nil, err
+		} else {
+			logmongoconn.Warnf("===ping unsuccessful===")
+			sharedConn.mclient = client
+			sharedConn.connected = false
+		}
 	} else {
 		logmongoconn.Debugf("===Ping success===")
 		sharedConn.mclient = client
+		sharedConn.connected = true
 		logmongoconn.Debugf("Returning new mongodb connection")
 	}
 	return sharedConn, nil
@@ -167,9 +174,10 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 
 // MongodbSharedConfigManager Structure
 type MongodbSharedConfigManager struct {
-	config  *Settings
-	name    string
-	mclient *mongo.Client
+	config    *Settings
+	name      string
+	mclient   *mongo.Client
+	connected bool
 }
 
 // Type of SharedConfigManager
@@ -179,7 +187,10 @@ func (k *MongodbSharedConfigManager) Type() string {
 
 // GetConnection ss
 func (k *MongodbSharedConfigManager) GetConnection() interface{} {
-	return k.mclient
+	return map[string]interface{}{
+		"mclient":   k.mclient,
+		"connected": k.connected,
+	}
 }
 
 // ReleaseConnection ss

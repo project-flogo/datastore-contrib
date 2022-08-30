@@ -39,9 +39,11 @@ func New(ctx activity.InitContext) (activity.Activity, error) {
 		if toConnerr != nil {
 			return nil, toConnerr
 		}
-		client := mcon.GetConnection().(*mongo.Client)
+		sharedConn := mcon.GetConnection().(map[string]interface{})
+		client := sharedConn["mclient"].(*mongo.Client)
+		connected := sharedConn["connected"].(bool)
 		act := &Activity{client: client, operation: settings.Operation, collectionName: settings.CollectionName,
-			database: settings.Database, timeout: settings.Timeout, contErr: settings.ContinueOnErr}
+			database: settings.Database, timeout: settings.Timeout, contErr: settings.ContinueOnErr, connected: connected}
 		return act, nil
 	}
 
@@ -56,6 +58,7 @@ type Activity struct {
 	database       string
 	timeout        int32
 	contErr        bool
+	connected      bool
 }
 
 var activityMd = activity.ToMetadata(&Input{}, &Output{})
@@ -97,6 +100,19 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 	logInsert.Debugf("Insert Data JSON from input: ", inputJSON)
 	if inputJSON == "" || inputJSON == "null" {
 		return false, fmt.Errorf("Input Data cannot be null ")
+	}
+
+	if !a.connected {
+		ctx, cancel := ctx.WithTimeout(ctx.Background(), 35*time.Second)
+		defer cancel()
+		err = a.client.Ping(ctx, nil)
+		if err != nil {
+			logInsert.Errorf("===ping error===")
+			return false, activity.NewRetriableError(fmt.Sprintf("Failed to ping to server due to error - {%s}", err.Error()), "", nil)
+		} else {
+			logInsert.Debugf("===Ping success===")
+			a.connected = true
+		}
 	}
 
 	db := a.client.Database(a.database)

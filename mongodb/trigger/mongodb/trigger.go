@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
+	"time"
 
 	"github.com/project-flogo/core/data/coerce"
 	"github.com/project-flogo/core/data/metadata"
@@ -41,8 +42,10 @@ func (t *TriggerFactory) New(config *trigger.Config) (trigger.Trigger, error) {
 		if toConnerr != nil {
 			return nil, toConnerr
 		}
-		mclient := mConn.GetConnection().(*mongo.Client)
-		return &Trigger{metadata: t.metadata, settings: settings, id: config.Id, mclient: mclient}, nil
+		sharedConn := mConn.GetConnection().(map[string]interface{})
+		mclient := sharedConn["mclient"].(*mongo.Client)
+		connected := sharedConn["connected"].(bool)
+		return &Trigger{metadata: t.metadata, settings: settings, id: config.Id, mclient: mclient, connected: connected}, nil
 	}
 	return nil, nil
 }
@@ -60,6 +63,7 @@ type Trigger struct {
 	mclient   *mongo.Client
 	logger    log.Logger
 	id        string
+	connected bool
 }
 
 // EventListener is structure of a single EventListener
@@ -109,6 +113,17 @@ func (t *Trigger) Start() error {
 	t.logger.Infof("Starting Trigger - %s", t.id)
 	for _, evntLsnr := range t.evntLsnrs {
 		// Start polling on a separate Go routine so as to not block engine
+		if !t.connected {
+			ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
+			defer cancel()
+			err := t.mclient.Ping(ctx, nil)
+			if err != nil {
+				t.logger.Errorf("===ping error===")
+				return err
+			}
+			t.logger.Debugf("===Ping success===")
+			t.connected = true
+		}
 		err := evntLsnr.setStream(t.mclient)
 		if err != nil {
 			return err
