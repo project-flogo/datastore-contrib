@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/project-flogo/core/data/coerce"
@@ -55,6 +56,7 @@ func (*mongodbFactory) Type() string {
 func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.Manager, error) {
 	sharedConn := &MongodbSharedConfigManager{}
 	var err error
+	sharedConn.mx = sync.RWMutex{}
 	sharedConn.config, err = getmongodbClientConfig(settings)
 	if err != nil {
 		return nil, err
@@ -178,6 +180,7 @@ type MongodbSharedConfigManager struct {
 	name      string
 	mclient   *mongo.Client
 	connected bool
+	mx        sync.RWMutex
 }
 
 // Type of SharedConfigManager
@@ -187,9 +190,10 @@ func (k *MongodbSharedConfigManager) Type() string {
 
 // GetConnection ss
 func (k *MongodbSharedConfigManager) GetConnection() interface{} {
-	return map[string]interface{}{
-		"mclient":   k.mclient,
-		"connected": k.connected,
+	return MongoDBManager{
+		Client:    k.mclient,
+		Connected: k.connected,
+		Lock:      &k.mx,
 	}
 }
 
@@ -242,4 +246,30 @@ func parseCert(cert string) string {
 	sEnc := content[lastBin+7 : len(content)]
 	sDec, _ := b64.StdEncoding.DecodeString(sEnc)
 	return (string(sDec))
+}
+
+type MongoDBManager struct {
+	Client    *mongo.Client
+	Connected bool
+	Lock      *sync.RWMutex
+}
+
+func (m *MongoDBManager) IsConnected() bool {
+	return m.Connected
+}
+
+func (m *MongoDBManager) Connect() error {
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if !m.IsConnected() {
+		ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
+		defer cancel()
+		err := m.Client.Ping(ctx, nil)
+		if err != nil {
+			return err
+		}
+	}
+	m.Connected = true
+	return nil
 }
