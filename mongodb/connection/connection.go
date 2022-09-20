@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/project-flogo/core/data/coerce"
@@ -55,6 +56,7 @@ func (*mongodbFactory) Type() string {
 func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.Manager, error) {
 	sharedConn := &MongodbSharedConfigManager{}
 	var err error
+	sharedConn.mx = sync.RWMutex{}
 	sharedConn.config, err = getmongodbClientConfig(settings)
 	if err != nil {
 		return nil, err
@@ -146,7 +148,7 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 	if err != nil {
 		return nil, err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
 	defer cancel()
 	err = client.Connect(ctx)
 	if err != nil {
@@ -155,11 +157,17 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 	}
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		logmongoconn.Errorf("===ping error===", err)
-		return nil, err
+		if strings.Contains(strings.ToLower(err.Error()), "bad auth") {
+			return nil, err
+		} else {
+			logmongoconn.Warnf("Failed to ping to the server")
+			sharedConn.mclient = client
+			sharedConn.connected = false
+		}
 	} else {
-		logmongoconn.Debugf("===Ping success===")
+		logmongoconn.Debugf("Successful ping to the server")
 		sharedConn.mclient = client
+		sharedConn.connected = true
 		logmongoconn.Debugf("Returning new mongodb connection")
 	}
 	return sharedConn, nil
@@ -167,9 +175,11 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 
 // MongodbSharedConfigManager Structure
 type MongodbSharedConfigManager struct {
-	config  *Settings
-	name    string
-	mclient *mongo.Client
+	config    *Settings
+	name      string
+	mclient   *mongo.Client
+	connected bool
+	mx        sync.RWMutex
 }
 
 // Type of SharedConfigManager
@@ -179,7 +189,11 @@ func (k *MongodbSharedConfigManager) Type() string {
 
 // GetConnection ss
 func (k *MongodbSharedConfigManager) GetConnection() interface{} {
-	return k.mclient
+	return MongoDBManager{
+		Client:    k.mclient,
+		Connected: k.connected,
+		Lock:      &k.mx,
+	}
 }
 
 // ReleaseConnection ss
@@ -231,4 +245,30 @@ func parseCert(cert string) string {
 	sEnc := content[lastBin+7 : len(content)]
 	sDec, _ := b64.StdEncoding.DecodeString(sEnc)
 	return (string(sDec))
+}
+
+type MongoDBManager struct {
+	Client    *mongo.Client
+	Connected bool
+	Lock      *sync.RWMutex
+}
+
+func (m *MongoDBManager) IsConnected() bool {
+	return m.Connected
+}
+
+func (m *MongoDBManager) Connect() error {
+	m.Lock.Lock()
+	defer m.Lock.Unlock()
+
+	if !m.IsConnected() {
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		err := m.Client.Ping(ctx, nil)
+		if err != nil {
+			return err
+		}
+	}
+	m.Connected = true
+	return nil
 }

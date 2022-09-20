@@ -1,7 +1,7 @@
 {
   "name": "mongodb-updateDocument",
   "title": "MongoDB Update Document",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "TIBCO Software Inc.",
   "type": "flogo:activity",
   "description": "Mongodb Update Document activity",
@@ -51,6 +51,11 @@
       "required": true
     }
   ],
+  "feature": {
+    "retry": {
+      "enabled": true
+    }
+  },
   "output": [
     {
       "name": "matchedCount",

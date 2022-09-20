@@ -10,6 +10,7 @@ import (
 	"github.com/project-flogo/core/data/coerce"
 	"github.com/project-flogo/core/data/metadata"
 	"github.com/project-flogo/core/support/log"
+	connection "github.com/project-flogo/datastore-contrib/mongodb/connection"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -36,8 +37,8 @@ func New(ctx activity.InitContext) (activity.Activity, error) {
 		if toConnerr != nil {
 			return nil, toConnerr
 		}
-		client := mcon.GetConnection().(*mongo.Client)
-		act := &Activity{client: client, operation: settings.Operation, collectionName: settings.CollectionName,
+		mdMgr := mcon.GetConnection().(connection.MongoDBManager)
+		act := &Activity{mdMgr: mdMgr, operation: settings.Operation, collectionName: settings.CollectionName,
 			database: settings.Database, timeout: settings.Timeout}
 		return act, nil
 	}
@@ -56,12 +57,15 @@ func (a *Activity) Cleanup() error {
 	logRemove.Debugf("cleaning up MongoDB Remove Activity")
 	ctx, cancel := ctx.WithTimeout(ctx.Background(), 30*time.Second)
 	defer cancel()
-	return a.client.Disconnect(ctx)
+	if a.mdMgr.IsConnected() {
+		return a.mdMgr.Client.Disconnect(ctx)
+	}
+	return nil
 }
 
 // Activity is a stub for your Activity implementation
 type Activity struct {
-	client         *mongo.Client
+	mdMgr          connection.MongoDBManager
 	operation      string
 	collectionName string
 	database       string
@@ -94,7 +98,15 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 	inputJSON = string(jsonBytes)
 	logRemove.Debugf("InputJSON: ", inputJSON)
 
-	db := a.client.Database(a.database)
+	if !a.mdMgr.IsConnected() {
+		err := a.mdMgr.Connect()
+		if err != nil {
+			return false, activity.NewRetriableError(fmt.Sprintf("Failed to ping to server due to error - {%s}", err.Error()), "", nil)
+		}
+		logRemove.Debugf("Successful ping to the server")
+	}
+
+	db := a.mdMgr.Client.Database(a.database)
 	coll := db.Collection(a.collectionName)
 	timeout := a.timeout
 	if timeout <= 0 {

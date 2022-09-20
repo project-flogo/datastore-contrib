@@ -1,7 +1,7 @@
 {
   "name": "mongodb-queryDocument",
   "title": "MongoDB Query Document",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "TIBCO Software Inc.",
   "type": "flogo:activity",
   "description": "Mongodb Query Document activity",
@@ -45,6 +45,11 @@
       "required": true
     }
   ],
+  "feature": {
+    "retry": {
+      "enabled": true
+    }
+  },
   "output": [
     {
       "name": "response",

@@ -9,6 +9,7 @@ import (
 	"github.com/project-flogo/core/data/metadata"
 	"github.com/project-flogo/core/support/log"
 	"github.com/project-flogo/core/trigger"
+	connection "github.com/project-flogo/datastore-contrib/mongodb/connection"
 	"go.mongodb.org/mongo-driver/bson"
 	mongo "go.mongodb.org/mongo-driver/mongo"
 )
@@ -41,8 +42,8 @@ func (t *TriggerFactory) New(config *trigger.Config) (trigger.Trigger, error) {
 		if toConnerr != nil {
 			return nil, toConnerr
 		}
-		mclient := mConn.GetConnection().(*mongo.Client)
-		return &Trigger{metadata: t.metadata, settings: settings, id: config.Id, mclient: mclient}, nil
+		mdMgr := mConn.GetConnection().(connection.MongoDBManager)
+		return &Trigger{metadata: t.metadata, settings: settings, id: config.Id, mdMgr: mdMgr}, nil
 	}
 	return nil, nil
 }
@@ -57,9 +58,10 @@ type Trigger struct {
 	metadata  *trigger.Metadata
 	settings  *Settings
 	evntLsnrs []*EventListener
-	mclient   *mongo.Client
+	mdMgr     connection.MongoDBManager
 	logger    log.Logger
 	id        string
+	connected bool
 }
 
 // EventListener is structure of a single EventListener
@@ -109,7 +111,15 @@ func (t *Trigger) Start() error {
 	t.logger.Infof("Starting Trigger - %s", t.id)
 	for _, evntLsnr := range t.evntLsnrs {
 		// Start polling on a separate Go routine so as to not block engine
-		err := evntLsnr.setStream(t.mclient)
+		if !t.mdMgr.IsConnected() {
+			err := t.mdMgr.Connect()
+			if err != nil {
+				return err
+			}
+			t.logger.Debugf("Successful ping to the server")
+		}
+
+		err := evntLsnr.setStream(t.mdMgr.Client)
 		if err != nil {
 			return err
 		}
@@ -253,7 +263,9 @@ func (evntLsnr *EventListener) process(stringOp string) {
 // Stop implements trigger.Trigger.Stop
 func (t *Trigger) Stop() error {
 	t.logger.Infof("Stopping Trigger - %s", t.id)
-	t.mclient.Disconnect(context.Background())
+	if t.mdMgr.IsConnected() {
+		t.mdMgr.Client.Disconnect(context.Background())
+	}
 	t.logger.Infof("Trigger - %s  stopped", t.id)
 	return nil
 }
