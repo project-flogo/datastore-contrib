@@ -158,15 +158,14 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 	err = client.Ping(ctx, nil)
 	if err != nil {
 		if strings.Contains(strings.ToLower(err.Error()), "bad auth") {
-			logmongoconn.Errorf("===ping error===", err)
 			return nil, err
 		} else {
-			logmongoconn.Warnf("===ping unsuccessful===")
+			logmongoconn.Warnf("Failed to ping to the server")
 			sharedConn.mclient = client
 			sharedConn.connected = false
 		}
 	} else {
-		logmongoconn.Debugf("===Ping success===")
+		logmongoconn.Debugf("Successful ping to the server")
 		sharedConn.mclient = client
 		sharedConn.connected = true
 		logmongoconn.Debugf("Returning new mongodb connection")
@@ -263,7 +262,7 @@ func (m *MongoDBManager) Connect() error {
 	defer m.Lock.Unlock()
 
 	if !m.IsConnected() {
-		ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
 		err := m.Client.Ping(ctx, nil)
 		if err != nil {

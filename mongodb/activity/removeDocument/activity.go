@@ -101,10 +101,9 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 	if !a.mdMgr.IsConnected() {
 		err := a.mdMgr.Connect()
 		if err != nil {
-			logRemove.Errorf("===ping error===")
 			return false, activity.NewRetriableError(fmt.Sprintf("Failed to ping to server due to error - {%s}", err.Error()), "", nil)
 		}
-		logRemove.Debugf("===Ping success===")
+		logRemove.Debugf("Successful ping to the server")
 	}
 
 	db := a.mdMgr.Client.Database(a.database)

@@ -111,10 +111,9 @@ func (a *Activity) Eval(context activity.Context) (done bool, err error) {
 	if !a.mdMgr.IsConnected() {
 		err := a.mdMgr.Connect()
 		if err != nil {
-			logquery.Errorf("===ping error===")
 			return false, activity.NewRetriableError(fmt.Sprintf("Failed to ping to server due to error - {%s}", err.Error()), "", nil)
 		}
-		logquery.Debugf("===Ping success===")
+		logquery.Debugf("Successful ping to the server")
 	}
 
 	client := a.mdMgr.Client
