@@ -37,6 +37,7 @@ type Settings struct {
 	ClientCert    string `md:"clientCert"`
 	KeyPass       string `md:"keyPassword"`
 	X509          bool   `md:"x509"`
+	AuthDB        string `md:"authenticationDB"`
 }
 
 func init() {
@@ -69,16 +70,25 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 	url := sharedConn.config.ConnectionURI
 	credType := sharedConn.config.CredType
 	ssl := sharedConn.config.Ssl
+	authDB := sharedConn.config.AuthDB
 
 	if credType != "None" {
 		userName := sharedConn.config.UserName
 		password := sharedConn.config.Password
-		opts.SetAuth(options.Credential{
+		creds := options.Credential{
 			AuthMechanism: credType,
 			Username:      userName,
 			Password:      password,
-		})
+		}
+		if authDB != "" {
+			creds.AuthSource = authDB
+		}
+		opts.SetAuth(creds)
 	}
+
+	//Appling uri before so TLSConfig doesn't get overwritten for srv urls
+	opts.ApplyURI(url)
+
 	//ssl
 	if ssl {
 		var tlsConfig *tls.Config
@@ -144,7 +154,7 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 		opts.SetTLSConfig(tlsConfig)
 
 	}
-	client, err := mongo.NewClient(opts.ApplyURI(url))
+	client, err := mongo.NewClient(opts)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +167,7 @@ func (*mongodbFactory) NewManager(settings map[string]interface{}) (connection.M
 	}
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		if strings.Contains(strings.ToLower(err.Error()), "bad auth") {
+		if strings.Contains(strings.ToLower(err.Error()), "bad auth") || strings.Contains(strings.ToLower(err.Error()), "authentication failed") {
 			return nil, err
 		} else {
 			logmongoconn.Warnf("Failed to ping to the server")
