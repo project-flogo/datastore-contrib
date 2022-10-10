@@ -32,6 +32,10 @@
 			"value": "None"
 		},
 		{
+			"name": "authenticationDB",
+			"type": "string"
+		},
+		{
 			"name": "username",
 			"type": "string",
 			"required": false
