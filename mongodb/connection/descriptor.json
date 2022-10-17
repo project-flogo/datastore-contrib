@@ -3,7 +3,7 @@
 	"title": "MongoDB Connector",
 	"author": "TIBCO Software Inc.",
 	"type": "flogo:connector",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"settings": [
 		{
 			"name": "name",
