@@ -9,7 +9,7 @@ require (
 	github.com/pkg/errors v0.8.1 // indirect
 	github.com/project-flogo/core v0.9.0
 	github.com/stretchr/testify v1.3.0
-	golang.org/x/net v0.0.0-20190514140710-3ec191127204 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	gopkg.in/couchbase/gocb.v1 v1.6.1
 	gopkg.in/couchbase/gocbcore.v7 v7.1.13 // indirect
 	gopkg.in/couchbaselabs/gocbconnstr.v1 v1.0.2 // indirect
